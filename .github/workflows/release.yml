@@ -1,0 +1,398 @@
+name: Build Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Resolve and validate versions
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+
+          if ($tag -notmatch '^v(\d+)\.(\d+)\.(\d+)$') {
+              throw "Invalid release tag [$tag]. Expected format: v1.2.3"
+          }
+
+          $tagVersion = $tag.Substring(1)
+
+          if (-not (Test-Path -LiteralPath "version.json" -PathType Leaf)) {
+              throw "version.json was not found in the repository root."
+          }
+
+          $versionInfo =
+              Get-Content -LiteralPath "version.json" -Raw |
+              ConvertFrom-Json
+
+          $frameworkVersion =
+              [string]$versionInfo.FrameworkVersion
+
+          $driverEvaluatorVersion =
+              [string]$versionInfo.Components.DriverEvaluator
+
+          $driverDeployerVersion =
+              [string]$versionInfo.Components.DriverDeployer
+
+          if ([string]::IsNullOrWhiteSpace($frameworkVersion)) {
+              throw "FrameworkVersion is missing from version.json."
+          }
+
+          if ([string]::IsNullOrWhiteSpace($driverEvaluatorVersion)) {
+              throw "Components.DriverEvaluator is missing from version.json."
+          }
+
+          if ([string]::IsNullOrWhiteSpace($driverDeployerVersion)) {
+              throw "Components.DriverDeployer is missing from version.json."
+          }
+
+          if ($frameworkVersion -ne $tagVersion) {
+              throw "Framework version mismatch. Git tag is [$tagVersion], but version.json contains [$frameworkVersion]."
+          }
+
+          "framework_version=$frameworkVersion" >> $env:GITHUB_OUTPUT
+
+          "driver_evaluator_version=$driverEvaluatorVersion" >> $env:GITHUB_OUTPUT
+
+          "driver_deployer_version=$driverDeployerVersion" >> $env:GITHUB_OUTPUT
+
+          Write-Host "Release tag: $tag"
+          Write-Host "Framework version: $frameworkVersion"
+          Write-Host "DriverEvaluator version: $driverEvaluatorVersion"
+          Write-Host "DriverDeployer version: $driverDeployerVersion"
+
+      - name: Inject component versions
+        shell: pwsh
+        run: |
+          $components = @(
+              @{
+                  Path =
+                      "src\HP-DCF\SupportFiles\Automation\DriverEvaluator.ps1"
+
+                  Name = "DriverEvaluator"
+
+                  Version =
+                      "${{ steps.version.outputs.driver_evaluator_version }}"
+              },
+              @{
+                  Path =
+                      "src\HP-DCF\SupportFiles\Automation\DriverDeployer.ps1"
+
+                  Name = "DriverDeployer"
+
+                  Version =
+                      "${{ steps.version.outputs.driver_deployer_version }}"
+              }
+          )
+
+          foreach ($component in $components) {
+              $path = $component.Path
+              $componentVersion = $component.Version
+
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+                  throw "$($component.Name) not found: $path"
+              }
+
+              $content =
+                  Get-Content -LiteralPath $path -Raw
+
+              if (
+                  $content -notmatch
+                  [regex]::Escape('__COMPONENT_VERSION__')
+              ) {
+                  throw "Version placeholder __COMPONENT_VERSION__ was not found in $path"
+              }
+
+              $content =
+                  $content.Replace(
+                      '__COMPONENT_VERSION__',
+                      $componentVersion
+                  )
+
+              Set-Content `
+                  -LiteralPath $path `
+                  -Value $content `
+                  -Encoding UTF8
+          }
+
+      - name: Verify release scripts
+        shell: pwsh
+        run: |
+          $components = @(
+              @{
+                  Path =
+                      "src\HP-DCF\SupportFiles\Automation\DriverEvaluator.ps1"
+
+                  Name = "DriverEvaluator"
+
+                  Version =
+                      "${{ steps.version.outputs.driver_evaluator_version }}"
+              },
+              @{
+                  Path =
+                      "src\HP-DCF\SupportFiles\Automation\DriverDeployer.ps1"
+
+                  Name = "DriverDeployer"
+
+                  Version =
+                      "${{ steps.version.outputs.driver_deployer_version }}"
+              }
+          )
+
+          foreach ($component in $components) {
+              $path = $component.Path
+              $componentVersion = $component.Version
+
+              $content =
+                  Get-Content -LiteralPath $path -Raw
+
+              if (
+                  $content -match
+                  [regex]::Escape('__COMPONENT_VERSION__')
+              ) {
+                  throw "Component version placeholder is still present in $path"
+              }
+
+              $expected =
+                  '$ComponentVersion = "' +
+                  $componentVersion +
+                  '"'
+
+              if (-not $content.Contains($expected)) {
+                  throw "Expected $($component.Name) component version [$componentVersion] was not found in $path"
+              }
+
+              $tokens = $null
+              $errors = $null
+
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                  $path,
+                  [ref]$tokens,
+                  [ref]$errors
+              ) | Out-Null
+
+              if ($errors.Count -gt 0) {
+                  throw "$($component.Name) failed PowerShell syntax validation: $($errors[0].Message)"
+              }
+
+              Write-Host `
+                  "$($component.Name) component version verified: $componentVersion"
+          }
+
+      - name: Validate PowerShell entrypoints
+        shell: pwsh
+        run: |
+          $scripts = @(
+              @{
+                  Name = "Framework PSADT"
+                  Path = "src\HP-DCF\Invoke-AppDeployToolkit.ps1"
+              },
+              @{
+                  Name = "DriverEvaluator"
+                  Path = "src\HP-DCF\SupportFiles\Automation\DriverEvaluator.ps1"
+              },
+              @{
+                  Name = "DriverDeployer"
+                  Path = "src\HP-DCF\SupportFiles\Automation\DriverDeployer.ps1"
+              },
+              @{
+                  Name = "DriverDeployment PSADT"
+                  Path = "src\HP-DCF\SupportFiles\DriverDeployment\Invoke-AppDeployToolkit.ps1"
+              }
+          )
+
+          foreach ($script in $scripts) {
+              $path = $script.Path
+
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+                  throw "$($script.Name) not found: $path"
+              }
+
+              $tokens = $null
+              $errors = $null
+
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                  $path,
+                  [ref]$tokens,
+                  [ref]$errors
+              ) | Out-Null
+
+              if ($errors.Count -gt 0) {
+                  $messages =
+                      $errors |
+                      ForEach-Object { $_.Message }
+
+                  throw "$($script.Name) failed PowerShell syntax validation: $($messages -join ' | ')"
+              }
+
+              Write-Host "$($script.Name) PowerShell syntax validation passed."
+          }
+
+      - name: Validate administrative templates
+        shell: pwsh
+        run: |
+          $admxPath =
+              "src\ADMX\HPDriverComplianceFramework.admx"
+
+          $admlPaths = @(
+              "src\ADMX\en-US\HPDriverComplianceFramework.adml",
+              "src\ADMX\hu-HU\HPDriverComplianceFramework.adml"
+          )
+
+          $xmlPaths = @($admxPath) + $admlPaths
+
+          foreach ($path in $xmlPaths) {
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+                  throw "Administrative Template file not found: $path"
+              }
+
+              try {
+                  [xml](
+                      Get-Content -LiteralPath $path -Raw
+                  ) | Out-Null
+              }
+              catch {
+                  throw "XML validation failed for [$path]: $($_.Exception.Message)"
+              }
+
+              Write-Host "XML validation passed: $path"
+          }
+
+          $admxText =
+              Get-Content -LiteralPath $admxPath -Raw
+
+          $requiredStringIds = @(
+              [regex]::Matches(
+                  $admxText,
+                  '\$\(string\.([^)]+)\)'
+              ) |
+              ForEach-Object {
+                  $_.Groups[1].Value
+              } |
+              Sort-Object -Unique
+          )
+
+          foreach ($admlPath in $admlPaths) {
+              [xml]$adml =
+                  Get-Content -LiteralPath $admlPath -Raw
+
+              $definedStringIds = @(
+                  $adml.policyDefinitionResources.resources.stringTable.string |
+                  ForEach-Object {
+                      [string]$_.id
+                  }
+              )
+
+              $missing = @(
+                  $requiredStringIds |
+                  Where-Object {
+                      $_ -notin $definedStringIds
+                  }
+              )
+
+              $duplicates = @(
+                  $definedStringIds |
+                  Group-Object |
+                  Where-Object {
+                      $_.Count -gt 1
+                  } |
+                  Select-Object -ExpandProperty Name
+              )
+
+              if ($missing.Count -gt 0) {
+                  throw "ADML [$admlPath] is missing string resources required by ADMX: $($missing -join ', ')"
+              }
+
+              if ($duplicates.Count -gt 0) {
+                  throw "ADML [$admlPath] contains duplicate string resource IDs: $($duplicates -join ', ')"
+              }
+
+              Write-Host "ADML resource validation passed: $admlPath ($($requiredStringIds.Count) required strings)."
+          }
+
+      - name: Build release package
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+
+          $packageRoot =
+              "release\HP-Driver-Compliance-Framework"
+
+          $zip =
+              "HP-Driver-Compliance-Framework-$tag.zip"
+
+          New-Item `
+              -Path $packageRoot `
+              -ItemType Directory `
+              -Force |
+              Out-Null
+
+          Copy-Item `
+              -LiteralPath "src\HP-DCF" `
+              -Destination $packageRoot `
+              -Recurse `
+              -Force
+
+          Copy-Item `
+              -LiteralPath "src\ADMX" `
+              -Destination $packageRoot `
+              -Recurse `
+              -Force
+
+          Copy-Item `
+              -LiteralPath "docs" `
+              -Destination $packageRoot `
+              -Recurse `
+              -Force
+
+          Copy-Item `
+              -LiteralPath "res" `
+              -Destination $packageRoot `
+              -Recurse `
+              -Force
+
+          Copy-Item `
+              -LiteralPath "README.md" `
+              -Destination $packageRoot `
+              -Force
+
+          Copy-Item `
+              -LiteralPath "version.json" `
+              -Destination $packageRoot `
+              -Force
+
+          Compress-Archive `
+              -Path "$packageRoot\*" `
+              -DestinationPath $zip `
+              -Force
+
+          Write-Host "Created release package: $zip"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+
+          $zip =
+              "HP-Driver-Compliance-Framework-$tag.zip"
+
+          gh release create $tag `
+              $zip `
+              --verify-tag `
+              --generate-notes `
+              --title "HP Driver Compliance Framework $tag"

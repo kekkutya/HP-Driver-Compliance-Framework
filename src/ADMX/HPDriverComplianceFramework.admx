@@ -1,0 +1,295 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitions revision="2.0" schemaVersion="1.0"
+  xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+
+  <policyNamespaces>
+    <target prefix="HPDriverComplianceFramework"
+            namespace="HP.DriverComplianceFramework.Policies" />
+    <using prefix="windows"
+           namespace="Microsoft.Policies.Windows" />
+  </policyNamespaces>
+
+  <resources minRequiredRevision="1.0" />
+
+  <supportedOn>
+    <definitions>
+      <definition name="SUPPORTED_Windows10OrLater"
+                  displayName="$(string.SUPPORTED_Windows10OrLater)" />
+    </definitions>
+  </supportedOn>
+
+  <categories>
+    <category name="HPDriverComplianceFramework"
+              displayName="$(string.Category_Framework)" />
+
+    <category name="DriverEvaluator"
+              displayName="$(string.Category_DriverEvaluator)">
+      <parentCategory ref="HPDriverComplianceFramework" />
+    </category>
+
+    <category name="DriverDeployer" displayName="$(string.Category_DriverDeployer)">
+      <parentCategory ref="HPDriverComplianceFramework" />
+    </category>
+  </categories>
+
+  <policies>
+
+    <!-- ===================================================== -->
+    <!-- Framework-wide settings                               -->
+    <!-- ===================================================== -->
+
+    <policy name="Framework_Enabled"
+            class="Machine"
+            displayName="$(string.Policy_Enabled)"
+            explainText="$(string.Explain_Enabled)"
+            key="SOFTWARE\HPDriverComplianceFramework"
+            presentation="$(presentation.Presentation_Enabled)">
+      <parentCategory ref="HPDriverComplianceFramework" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <boolean id="Enabled"
+                 valueName="Enabled">
+          <trueValue>
+            <decimal value="1" />
+          </trueValue>
+          <falseValue>
+            <decimal value="0" />
+          </falseValue>
+        </boolean>
+      </elements>
+    </policy>
+
+
+    <policy name="Framework_ExcludeSoftPaqs"
+            class="Machine"
+            displayName="$(string.Policy_ExcludeSoftPaqs)"
+            explainText="$(string.Explain_ExcludeSoftPaqs)"
+            key="SOFTWARE\HPDriverComplianceFramework"
+            presentation="$(presentation.Presentation_ExcludeSoftPaqs)">
+      <parentCategory ref="HPDriverComplianceFramework" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <text id="ExcludeSoftPaqs"
+              valueName="ExcludeSoftPaqs"
+              required="true"
+              maxLength="2048" />
+      </elements>
+    </policy>
+
+
+    <!-- ===================================================== -->
+    <!-- DriverEvaluator settings                                 -->
+    <!-- ===================================================== -->
+
+    
+
+
+    <policy name="DriverEvaluator_ScheduleMode"
+            class="Machine"
+            displayName="$(string.Policy_ScheduleMode)"
+            explainText="$(string.Explain_ScheduleMode)"
+            key="SOFTWARE\HPDriverComplianceFramework\DriverEvaluator"
+            presentation="$(presentation.Presentation_ScheduleMode)">
+      <parentCategory ref="DriverEvaluator" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <enum id="ScheduleMode"
+              valueName="ScheduleMode"
+              required="true">
+          <item displayName="$(string.Enum_Monthly)">
+            <value>
+              <string>Monthly</string>
+            </value>
+          </item>
+          <item displayName="$(string.Enum_Weekly)">
+            <value>
+              <string>Weekly</string>
+            </value>
+          </item>
+        </enum>
+      </elements>
+    </policy>
+
+
+    <policy name="DriverEvaluator_MonthMode"
+            class="Machine"
+            displayName="$(string.Policy_MonthMode)"
+            explainText="$(string.Explain_MonthMode)"
+            key="SOFTWARE\HPDriverComplianceFramework\DriverEvaluator"
+            presentation="$(presentation.Presentation_MonthMode)">
+      <parentCategory ref="DriverEvaluator" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <enum id="MonthMode"
+              valueName="MonthMode"
+              required="true">
+          <item displayName="$(string.Enum_All)">
+            <value>
+              <string>All</string>
+            </value>
+          </item>
+          <item displayName="$(string.Enum_Even)">
+            <value>
+              <string>Even</string>
+            </value>
+          </item>
+          <item displayName="$(string.Enum_Odd)">
+            <value>
+              <string>Odd</string>
+            </value>
+          </item>
+          <item displayName="$(string.Enum_Specific)">
+            <value>
+              <string>Specific</string>
+            </value>
+          </item>
+        </enum>
+      </elements>
+    </policy>
+
+
+    <policy name="DriverEvaluator_SpecificMonths"
+            class="Machine"
+            displayName="$(string.Policy_SpecificMonths)"
+            explainText="$(string.Explain_SpecificMonths)"
+            key="SOFTWARE\HPDriverComplianceFramework\DriverEvaluator"
+            presentation="$(presentation.Presentation_SpecificMonths)">
+      <parentCategory ref="DriverEvaluator" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <text id="SpecificMonths"
+              valueName="SpecificMonths"
+              required="true"
+              maxLength="35" />
+      </elements>
+    </policy>
+
+    <policy name="DriverEvaluator_WeeksOfMonth"
+            class="Machine"
+            displayName="$(string.Policy_WeeksOfMonth)"
+            explainText="$(string.Explain_WeeksOfMonth)"
+            key="SOFTWARE\HPDriverComplianceFramework\DriverEvaluator"
+            presentation="$(presentation.Presentation_WeeksOfMonth)">
+      <parentCategory ref="DriverEvaluator" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <text id="WeeksOfMonth"
+              valueName="WeeksOfMonth"
+              required="true"
+              maxLength="20" />
+      </elements>
+    </policy>
+
+<policy name="DriverEvaluator_WeekParity"
+            class="Machine"
+            displayName="$(string.Policy_WeekParity)"
+            explainText="$(string.Explain_WeekParity)"
+            key="SOFTWARE\HPDriverComplianceFramework\DriverEvaluator"
+            presentation="$(presentation.Presentation_WeekParity)">
+      <parentCategory ref="DriverEvaluator" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <enum id="WeekParity"
+              valueName="WeekParity"
+              required="true">
+          <item displayName="$(string.Enum_All)">
+            <value><string>All</string></value>
+          </item>
+          <item displayName="$(string.Enum_Even)">
+            <value><string>Even</string></value>
+          </item>
+          <item displayName="$(string.Enum_Odd)">
+            <value><string>Odd</string></value>
+          </item>
+        </enum>
+      </elements>
+    </policy>
+
+
+    <policy name="DriverEvaluator_DayOfWeek"
+            class="Machine"
+            displayName="$(string.Policy_DayOfWeek)"
+            explainText="$(string.Explain_DayOfWeek)"
+            key="SOFTWARE\HPDriverComplianceFramework\DriverEvaluator"
+            presentation="$(presentation.Presentation_DayOfWeek)">
+      <parentCategory ref="DriverEvaluator" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <enum id="DayOfWeek"
+              valueName="DayOfWeek"
+              required="true">
+          <item displayName="$(string.Enum_Monday)">
+            <value><string>Monday</string></value>
+          </item>
+          <item displayName="$(string.Enum_Tuesday)">
+            <value><string>Tuesday</string></value>
+          </item>
+          <item displayName="$(string.Enum_Wednesday)">
+            <value><string>Wednesday</string></value>
+          </item>
+          <item displayName="$(string.Enum_Thursday)">
+            <value><string>Thursday</string></value>
+          </item>
+          <item displayName="$(string.Enum_Friday)">
+            <value><string>Friday</string></value>
+          </item>
+          <item displayName="$(string.Enum_Saturday)">
+            <value><string>Saturday</string></value>
+          </item>
+          <item displayName="$(string.Enum_Sunday)">
+            <value><string>Sunday</string></value>
+          </item>
+        </enum>
+      </elements>
+    </policy>
+
+
+    <policy name="DriverEvaluator_RunOnOrAfter"
+            class="Machine"
+            displayName="$(string.Policy_RunOnOrAfter)"
+            explainText="$(string.Explain_RunOnOrAfter)"
+            key="SOFTWARE\HPDriverComplianceFramework\DriverEvaluator"
+            presentation="$(presentation.Presentation_RunOnOrAfter)">
+      <parentCategory ref="DriverEvaluator" />
+      <supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements>
+        <boolean id="RunOnOrAfter"
+                 valueName="RunOnOrAfter">
+          <trueValue>
+            <decimal value="1" />
+          </trueValue>
+          <falseValue>
+            <decimal value="0" />
+          </falseValue>
+        </boolean>
+      </elements>
+    </policy>
+
+
+    <policy name="DriverDeployer_Enabled" class="Machine" displayName="$(string.Policy_DeployerEnabled)"
+            explainText="$(string.Explain_DeployerEnabled)" key="SOFTWARE\HPDriverComplianceFramework\DriverDeployer"
+            presentation="$(presentation.Presentation_DeployerEnabled)">
+      <parentCategory ref="DriverDeployer" /><supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements><boolean id="DeployerEnabled" valueName="Enabled">
+        <trueValue><decimal value="1" /></trueValue><falseValue><decimal value="0" /></falseValue>
+      </boolean></elements>
+    </policy>
+
+    <policy name="DriverDeployer_Ring" class="Machine" displayName="$(string.Policy_Ring)"
+            explainText="$(string.Explain_Ring)" key="SOFTWARE\HPDriverComplianceFramework\DriverDeployer"
+            presentation="$(presentation.Presentation_Ring)">
+      <parentCategory ref="DriverDeployer" /><supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements><enum id="Ring" valueName="Ring" required="true">
+        <item displayName="$(string.Ring_Pilot)"><value><string>Pilot</string></value></item>
+        <item displayName="$(string.Ring_Broad)"><value><string>Broad</string></value></item>
+      </enum></elements>
+    </policy>
+
+    <policy name="DriverDeployer_BroadDelayDays" class="Machine" displayName="$(string.Policy_BroadDelayDays)"
+            explainText="$(string.Explain_BroadDelayDays)" key="SOFTWARE\HPDriverComplianceFramework\DriverDeployer"
+            presentation="$(presentation.Presentation_BroadDelayDays)">
+      <parentCategory ref="DriverDeployer" /><supportedOn ref="SUPPORTED_Windows10OrLater" />
+      <elements><decimal id="BroadDelayDays" valueName="BroadDelayDays" minValue="0" maxValue="365" required="true" /></elements>
+    </policy>
+</policies>
+</policyDefinitions>

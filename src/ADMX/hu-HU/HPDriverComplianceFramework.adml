@@ -1,0 +1,138 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<policyDefinitionResources xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitionResources" revision="2.0" schemaVersion="1.0">
+
+  <displayName>HP Driver Compliance Framework (HP-DCF)</displayName>
+  <description>Felügyeleti sablon a HP Driver Compliance Framework konfigurálásához.</description>
+
+  <resources>
+
+    <stringTable>
+
+      <string id="SUPPORTED_Windows10OrLater">Windows 10 vagy újabb</string>
+
+      <string id="Category_Framework">HP Driver Compliance Framework</string>
+      <string id="Category_DriverEvaluator">DriverEvaluator</string>
+
+      <string id="Policy_Enabled">HP Driver Compliance Framework engedélyezése</string>
+      <string id="Explain_Enabled">A framework egészére vonatkozó normál végrehajtást szabályozza. Engedélyezve az Enabled=1 értéket írja és lehetővé teszi a normál futást. Letiltva az Enabled=0 értéket írja. Ha a registry érték hiányzik, a framework alapértelmezetten letiltott. A DriverEvaluator -ForceRun hibaelhárítási célból felülbírálhatja a hiányzó Enabled értéket és az Enabled=0 állapotot is. Csak a 0 és 1 REG_DWORD érték érvényes.</string>
+
+      <string id="Policy_ExcludeSoftPaqs">SoftPaq-ok kizárása</string>
+      <string id="Explain_ExcludeSoftPaqs">Vesszővel elválasztott SoftPaq-azonosítók sp prefix nélkül. A DriverEvaluator a snapshot commit előtt alkalmazza a listát, a DriverDeployer pedig Normal és -ForceRun módban közvetlenül deployment előtt ismét ellenőrzi. A -ForceAll szándékosan figyelmen kívül hagyja ezt a listát.</string>
+<string id="Policy_ScheduleMode">Ütemezési mód</string>
+      <string id="Explain_ScheduleMode">Meghatározza a DriverEvaluator ütemezési módját.</string>
+
+      <string id="Policy_MonthMode">Hónap mód</string>
+      <string id="Explain_MonthMode">Meghatározza, hogy havi ütemezés esetén mely hónapok legyenek jogosultak evaluationre.</string>
+
+      <string id="Policy_SpecificMonths">Meghatározott hónapok</string>
+      <string id="Explain_SpecificMonths">A Specific hónap módhoz tartozó, vesszővel elválasztott hónapszámok. Érvényes értékek: 1-12.</string>
+
+      <string id="Policy_WeeksOfMonth">Hónapon belüli hetek</string>
+      <string id="Explain_WeeksOfMonth">Havi módban a konfigurált hétköznap hónapon belüli előfordulásai, vesszővel elválasztva. Érvényes értékek: 1,2,3,4,5,-1; a -1 az utolsó előfordulást jelenti. Példa: az 1,3 érték a konfigurált hétköznap első és harmadik előfordulását ütemezi. Beépített alapérték: 3.</string>
+
+      <string id="Policy_WeekParity">Hetek párossága</string>
+      <string id="Explain_WeekParity">Heti ütemezés esetén meghatározza, hogy minden, csak páros vagy csak páratlan sorszámú hét legyen jogosult.</string>
+
+      <string id="Policy_DayOfWeek">A hét napja</string>
+      <string id="Explain_DayOfWeek">Meghatározza az evaluation ütemezett hétköznapját. Beépített alapérték: szerda.</string>
+
+      <string id="Policy_RunOnOrAfter">Futtatás az ütemezett napon vagy azt követően</string>
+      <string id="Explain_RunOnOrAfter">Engedélyezve egy kihagyott konfigurált előfordulás később pótolható. Ha időközben egy későbbi konfigurált előfordulás dátuma is elérkezett, az újabb előfordulás felülírja a korábbi kihagyott előfordulást. Letiltva az evaluation kizárólag a konfigurált előfordulás pontos dátumán jogosult. Beépített alapérték: letiltva, a Broad evaluation policy szerint.</string>
+<string id="Enum_Monthly">Havi</string>
+      <string id="Enum_Weekly">Heti</string>
+
+      <string id="Enum_All">Mind</string>
+      <string id="Enum_Even">Páros</string>
+      <string id="Enum_Odd">Páratlan</string>
+      <string id="Enum_Specific">Meghatározott</string>
+
+      <string id="Enum_First">Első</string>
+      <string id="Enum_Second">Második</string>
+      <string id="Enum_Third">Harmadik</string>
+      <string id="Enum_Fourth">Negyedik</string>
+      <string id="Enum_Fifth">Ötödik</string>
+      <string id="Enum_Last">Utolsó</string>
+
+      <string id="Enum_Monday">Hétfő</string>
+      <string id="Enum_Tuesday">Kedd</string>
+      <string id="Enum_Wednesday">Szerda</string>
+      <string id="Enum_Thursday">Csütörtök</string>
+      <string id="Enum_Friday">Péntek</string>
+      <string id="Enum_Saturday">Szombat</string>
+      <string id="Enum_Sunday">Vasárnap</string>
+
+
+      <string id="Category_DriverDeployer">DriverDeployer</string>
+      <string id="Policy_DeployerEnabled">DriverDeployer engedélyezése</string>
+      <string id="Explain_DeployerEnabled">Explicit módon engedélyezi a DriverDeployer normál futását. Ha a policy nincs konfigurálva vagy le van tiltva, normál módban nem történik deployment. A -ForceRun és a -ForceAll felülbírálja ezt a komponensszintű beállítást. A framework-szintű Enabled policy marad a normál végrehajtás globális tiltókapcsolója.</string>
+      <string id="Policy_Ring">Telepítési ring</string>
+      <string id="Explain_Ring">Meghatározza a deployment ringet. A Pilot a sikeres DriverEvaluator snapshot időbélyegétől azonnal deploy-eligible. A Broad a sikeres snapshot időbélyege után BroadDelayDays nappal válik deploy-eligible-lé. A beépített ring alapérték Broad, amely érvényes policy/registry override hiányában használatos. A -ForceRun és -ForceAll felülbírálja a ring eligibilityt.</string>
+      <string id="Ring_Pilot">Pilot</string>
+      <string id="Ring_Broad">Broad</string>
+      <string id="Policy_BroadDelayDays">Broad ring késleltetése (nap)</string>
+      <string id="Explain_BroadDelayDays">A sikeres DriverEvaluator snapshot időbélyegéhez hozzáadott napok száma a Broad ring deployment eligibility meghatározásához. Az érték policy/registry segítségével konfigurálható. Érvényes override hiányában a beépített 21 napos alapérték érvényes. Érvényes tartomány: 0-365.</string>
+
+    </stringTable>
+
+
+    <presentationTable>
+
+      <presentation id="Presentation_Enabled">
+        <checkBox refId="Enabled">Framework engedélyezése</checkBox>
+      </presentation>
+
+
+      <presentation id="Presentation_ExcludeSoftPaqs">
+        <textBox refId="ExcludeSoftPaqs">
+          <label>Kizárt SoftPaq-ok (vesszővel elválasztva):</label>
+          <defaultValue />
+        </textBox>
+      </presentation>
+<presentation id="Presentation_ScheduleMode">
+        <dropdownList refId="ScheduleMode">Ütemezési mód:</dropdownList>
+      </presentation>
+
+      <presentation id="Presentation_MonthMode">
+        <dropdownList refId="MonthMode">Hónap mód:</dropdownList>
+      </presentation>
+
+      <presentation id="Presentation_SpecificMonths">
+        <textBox refId="SpecificMonths">
+          <label>Meghatározott hónapok:</label>
+          <defaultValue />
+        </textBox>
+      </presentation>
+
+      <presentation id="Presentation_WeeksOfMonth">
+        <textBox refId="WeeksOfMonth">
+          <label>Hónapon belüli hetek (például 1,3):</label>
+        </textBox>
+      </presentation>
+
+      <presentation id="Presentation_WeekParity">
+        <dropdownList refId="WeekParity">Hetek párossága:</dropdownList>
+      </presentation>
+
+      <presentation id="Presentation_DayOfWeek">
+        <dropdownList refId="DayOfWeek">A hét napja:</dropdownList>
+      </presentation>
+
+      <presentation id="Presentation_RunOnOrAfter">
+        <checkBox refId="RunOnOrAfter">Pótlás későbbi futásokkor a céldátum után, sikeres evaluationig</checkBox>
+      </presentation>
+
+
+      <presentation id="Presentation_DeployerEnabled">
+        <checkBox refId="DeployerEnabled">DriverDeployer engedélyezése</checkBox>
+      </presentation>
+      <presentation id="Presentation_Ring">
+        <dropdownList refId="Ring">Ring:</dropdownList>
+      </presentation>
+      <presentation id="Presentation_BroadDelayDays">
+        <decimalTextBox refId="BroadDelayDays">Késleltetés napokban:</decimalTextBox>
+      </presentation>
+
+    </presentationTable>
+
+  </resources>
+</policyDefinitionResources>
