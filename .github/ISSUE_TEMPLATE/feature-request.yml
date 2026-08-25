@@ -1,0 +1,65 @@
+name: Feature request
+description: Suggest an improvement or new capability for HP Driver Compliance Framework
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement.
+
+        Please describe the use case and desired behavior rather than only a proposed implementation.
+        Do not include credentials, secrets, personal information, or other sensitive data.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Related component
+      options:
+        - DriverEvaluator
+        - DriverDeployer
+        - Framework / deployment package
+        - Administrative Templates (ADMX/ADML)
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem would this change solve, or what use case would it support?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the behavior or capability you would like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any alternative approaches or workarounds you have considered.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other relevant, non-sensitive information.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues for the same or a similar request.
+          required: true
+        - label: I removed credentials, secrets, personal information, and other sensitive data.
+          required: true

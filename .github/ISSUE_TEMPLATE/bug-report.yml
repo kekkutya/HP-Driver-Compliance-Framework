@@ -1,0 +1,92 @@
+name: Bug report
+description: Report a reproducible problem with HP Driver Compliance Framework
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem.
+
+        Do not include credentials, secrets, personal information, or other sensitive data.
+        For potential security vulnerabilities, follow the repository Security Policy.
+
+  - type: input
+    id: version
+    attributes:
+      label: Framework version
+      description: Which HP Driver Compliance Framework version is affected?
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - DriverEvaluator
+        - DriverDeployer
+        - Framework / deployment package
+        - Administrative Templates (ADMX/ADML)
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: windows-version
+    attributes:
+      label: Windows version
+      description: Provide the relevant Windows version or build, if applicable.
+      placeholder: "Windows 11 24H2"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+      description: Clearly describe the problem you encountered.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Describe the steps required to reproduce the problem.
+      placeholder: |
+        1. Configure ...
+        2. Run ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or output
+      description: |
+        Paste relevant sanitized log output or error messages here.
+        Remove credentials, secrets, personal information, internal hostnames, and other sensitive data.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues for the same or a similar problem.
+          required: true
+        - label: I removed credentials, secrets, personal information, and other sensitive data.
+          required: true
+        - label: This is not a security vulnerability report.
+          required: true
