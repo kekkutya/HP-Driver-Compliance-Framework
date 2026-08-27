@@ -44,6 +44,7 @@ Logon + 3 perc
    -> DriverDeployment PSADT
       -> felhasználói párbeszéd / elhalasztás
       -> HPIA-telepítés a rögzített SPList alapján
+      -> siker/újraindítás után snapshot-specifikus .deployed marker
 ```
 
 ## ForceAll
@@ -73,6 +74,7 @@ C:\HPIA\
 - A Normal működés explicit engedélyezést igényel, alapértelmezetten tiltott (fail-closed).
 - Evaluator nem tölt le és nem telepít SoftPaqot.
 - A rögzített SPList a telepítés változatlan bemenete.
+- Az egyező `.deployed` marker biztosítja, hogy a snapshotot a későbbi Normal futások ne telepítsék újra.
 - A kizárás a kiértékeléskor és közvetlenül a telepítés előtt is érvényesül.
 - A Pilot azonnali, a Broad késleltetett.
 - Másik aktív PSADT mellett nincs új átadás.

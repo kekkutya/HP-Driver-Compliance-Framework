@@ -58,7 +58,9 @@ C:\HPIA\IAReport\Snapshots\Evaluation-2026-08-W3.success
 
 Hibajelző fájl: `Evaluation-2026-08-W3.failed`.
 
-A teljes sikeres snapshot az egymáshoz tartozó manifest + SPList + `.success` hármas. Az SPList rögzíti a kiértékeléskor jóváhagyott SoftPaq ID-ket; a Deployer később nem cseréli ezeket újabb ajánlásokra. A `W1`, `W3` és `WL` rendre az első, harmadik és utolsó előfordulást jelöli. Alapértelmezetten a legutóbbi 6 snapshot-csoport marad meg.
+A snapshot sikeres telepítése után a DriverDeployment létrehozza a tartós `.deployed` completion markert. A `.deployed` nem feltétele az evaluation snapshot teljességének; azt rögzíti, hogy a snapshot később sikeres vagy újraindítást igénylő telepítési végállapotot ért el.
+
+A teljes sikeres snapshot az egymáshoz tartozó manifest + SPList + `.success` hármas. Az SPList rögzíti a kiértékeléskor jóváhagyott SoftPaq ID-ket; a Deployer később nem cseréli ezeket újabb ajánlásokra. A `W1`, `W3` és `WL` rendre az első, harmadik és utolsó előfordulást jelöli. Alapértelmezetten a legutóbbi 6 snapshot-csoport marad meg, a hozzájuk tartozó `.deployed` markerrel együtt.
 
 ## Log
 

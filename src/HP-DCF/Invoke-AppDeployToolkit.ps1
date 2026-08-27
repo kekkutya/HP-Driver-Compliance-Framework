@@ -90,7 +90,7 @@ $adtSession = @{
     # App variables.
     AppVendor = 'HP'
     AppName = 'Driver Compliance Framework'
-    AppVersion = '1.0.0'
+    AppVersion = '__FRAMEWORK_VERSION__'
     AppArch = 'x86'
     AppLang = 'EN'
     AppRevision = '01'

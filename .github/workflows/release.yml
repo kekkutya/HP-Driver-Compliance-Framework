@@ -107,15 +107,17 @@ jobs:
           Write-Host "DriverDeployer version: $driverDeployerVersion"
           Write-Host "Administrative Template version: $administrativeTemplateVersion"
 
-      - name: Inject component versions
+      - name: Inject release versions
         shell: pwsh
         run: |
-          $components = @(
+          $targets = @(
               @{
                   Path =
                       "src\HP-DCF\SupportFiles\Automation\DriverEvaluator.ps1"
 
                   Name = "DriverEvaluator"
+
+                  Placeholder = "__COMPONENT_VERSION__"
 
                   Version =
                       "${{ steps.version.outputs.driver_evaluator_version }}"
@@ -126,33 +128,55 @@ jobs:
 
                   Name = "DriverDeployer"
 
+                  Placeholder = "__COMPONENT_VERSION__"
+
+                  Version =
+                      "${{ steps.version.outputs.driver_deployer_version }}"
+              },
+              @{
+                  Path =
+                      "src\HP-DCF\Invoke-AppDeployToolkit.ps1"
+
+                  Name = "Framework PSADT"
+
+                  Placeholder = "__FRAMEWORK_VERSION__"
+
+                  Version =
+                      "${{ steps.version.outputs.framework_version }}"
+              },
+              @{
+                  Path =
+                      "src\HP-DCF\SupportFiles\DriverDeployment\Invoke-AppDeployToolkit.ps1"
+
+                  Name = "DriverDeployment PSADT"
+
+                  Placeholder = "__DRIVER_DEPLOYER_VERSION__"
+
                   Version =
                       "${{ steps.version.outputs.driver_deployer_version }}"
               }
           )
 
-          foreach ($component in $components) {
-              $path = $component.Path
-              $componentVersion = $component.Version
+          foreach ($target in $targets) {
+              $path = $target.Path
+              $placeholder = $target.Placeholder
+              $version = $target.Version
 
               if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
-                  throw "$($component.Name) not found: $path"
+                  throw "$($target.Name) not found: $path"
               }
 
               $content =
                   Get-Content -LiteralPath $path -Raw
 
-              if (
-                  $content -notmatch
-                  [regex]::Escape('__COMPONENT_VERSION__')
-              ) {
-                  throw "Version placeholder __COMPONENT_VERSION__ was not found in $path"
+              if (-not $content.Contains($placeholder)) {
+                  throw "Version placeholder [$placeholder] was not found in $path"
               }
 
               $content =
                   $content.Replace(
-                      '__COMPONENT_VERSION__',
-                      $componentVersion
+                      $placeholder,
+                      $version
                   )
 
               Set-Content `
@@ -223,6 +247,58 @@ jobs:
 
               Write-Host `
                   "$($component.Name) component version verified: $componentVersion"
+          }
+
+          $psadtTargets = @(
+              @{
+                  Path =
+                      "src\HP-DCF\Invoke-AppDeployToolkit.ps1"
+
+                  Name = "Framework PSADT"
+
+                  Placeholder = "__FRAMEWORK_VERSION__"
+
+                  Version =
+                      "${{ steps.version.outputs.framework_version }}"
+              },
+              @{
+                  Path =
+                      "src\HP-DCF\SupportFiles\DriverDeployment\Invoke-AppDeployToolkit.ps1"
+
+                  Name = "DriverDeployment PSADT"
+
+                  Placeholder = "__DRIVER_DEPLOYER_VERSION__"
+
+                  Version =
+                      "${{ steps.version.outputs.driver_deployer_version }}"
+              }
+          )
+
+          foreach ($target in $psadtTargets) {
+              $path = $target.Path
+              $placeholder = $target.Placeholder
+              $version = $target.Version
+
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+                  throw "$($target.Name) not found: $path"
+              }
+
+              $content =
+                  Get-Content -LiteralPath $path -Raw
+
+              if ($content.Contains($placeholder)) {
+                  throw "Version placeholder [$placeholder] is still present in $path"
+              }
+
+              $expected =
+                  "AppVersion = '$version'"
+
+              if (-not $content.Contains($expected)) {
+                  throw "Expected $($target.Name) AppVersion [$version] was not found in $path"
+              }
+
+              Write-Host `
+                  "$($target.Name) AppVersion verified: $version"
           }
 
       - name: Validate PowerShell entrypoints

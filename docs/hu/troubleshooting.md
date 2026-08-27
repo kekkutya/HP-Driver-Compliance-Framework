@@ -32,7 +32,7 @@ C:\HPIA\Automation\DriverEvaluator.ps1 -ForceRun
 Get-ChildItem "C:\HPIA\IAReport\Snapshots"
 ```
 
-Teljes sikeres snapshot: egymáshoz tartozó `.manifest.json`, `.splist.txt` és `.success` fájl. A 0 ajánlást tartalmazó snapshot is érvényes; ilyenkor a Deployer `NoRecommendations` eredménnyel, PSADT indítása nélkül kilép.
+Teljes sikeres snapshot: egymáshoz tartozó `.manifest.json`, `.splist.txt` és `.success` fájl. A 0 ajánlást tartalmazó snapshot is érvényes; ilyenkor a Deployer `NoRecommendations` eredménnyel, PSADT indítása nélkül kilép. Az egyező `Evaluation-<period>.deployed` marker azt rögzíti, hogy a snapshot már sikeres vagy újraindítást igénylő telepítési végállapotot ért el; a későbbi Normal futások `AlreadyDeployed` eredménnyel, PSADT indítása nélkül lépnek ki.
 
 ## A Deployer NoAction eredményének okai
 
@@ -42,7 +42,7 @@ Napló:
 C:\HPIA\IAReport\DriverDeployer-<ComputerName>.log
 ```
 
-Gyakori okok: `FrameworkDisabled`, `DriverDeployerDisabled`, `NoValidSnapshot`, `NoRecommendations`, `RingNotEligible`, `NoApplicableSoftPaqs`, `PSADTBusy`, `NoInternetConnection`, `DeploymentActive`.
+Gyakori okok: `FrameworkDisabled`, `DriverDeployerDisabled`, `NoValidSnapshot`, `NoRecommendations`, `AlreadyDeployed`, `RingNotEligible`, `NoApplicableSoftPaqs`, `PSADTBusy`, `NoInternetConnection`, `DeploymentActive`.
 
 ## Elhalasztott telepítés
 
@@ -50,7 +50,7 @@ Gyakori okok: `FrameworkDisabled`, `DriverDeployerDisabled`, `NoValidSnapshot`, 
 HKLM\SOFTWARE\PSAppDeployToolkit\DeferHistory
 ```
 
-A DriverDeploymenthez tartozó elhalasztási állapot esetén a Deployer ezt folytatja az új snapshot feldolgozása előtt. Másik aktív PSADT mellett a folytatást későbbre halasztja.
+A DriverDeploymenthez tartozó elhalasztási állapot esetén a Deployer először ellenőrzi a megőrzött átadáshoz tartozó snapshotot. Ha ehhez már egyező `.deployed` marker tartozik, az elavult defer- és átadási állapot `AlreadyDeployed` eredménnyel törlődik. Egyébként az elhalasztott telepítés folytatása elsőbbséget élvez az új snapshot feldolgozásával szemben. Másik aktív PSADT mellett a folytatást későbbre halasztja.
 
 ## Telepítési átadás
 

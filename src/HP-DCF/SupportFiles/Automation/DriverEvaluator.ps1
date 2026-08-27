@@ -99,6 +99,7 @@
       C:\HPIA\IAReport\Snapshots\Evaluation-<yyyy-MM-Wn>.failed
       C:\HPIA\IAReport\Snapshots\Evaluation-<yyyy-MM-Wn>.splist.txt
       C:\HPIA\IAReport\Snapshots\Evaluation-<yyyy-MM-Wn>.manifest.json
+      C:\HPIA\IAReport\Snapshots\Evaluation-<yyyy-MM-Wn>.deployed
 
     Occurrence suffix examples:
       W1 = first weekday occurrence
@@ -110,7 +111,7 @@
 
     The latest 6 snapshot artifact groups are retained by default. Retention
     treats each occurrence as one artifact group and removes the expired
-    .manifest.json, .splist.txt, .success and .failed files together.
+    .manifest.json, .splist.txt, .success, .failed and .deployed files together.
 
 .NOTES
     ComponentVersion is injected by the release workflow.
@@ -1303,6 +1304,11 @@ try
                 "$ArtifactPrefix-$ExpiredPeriod.failed"
 
 
+            $ExpiredDeployedMarker = Join-Path `
+                $SnapshotFolder `
+                "$ArtifactPrefix-$ExpiredPeriod.deployed"
+
+
             $ExpiredArtifacts = @(
                 [PSCustomObject]@{
                     Path = $ExpiredManifest.FullName
@@ -1319,6 +1325,10 @@ try
                 [PSCustomObject]@{
                     Path = $ExpiredFailedMarker
                     Description = "failed marker"
+                }
+                [PSCustomObject]@{
+                    Path = $ExpiredDeployedMarker
+                    Description = "deployed marker"
                 }
             )
 

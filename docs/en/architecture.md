@@ -71,6 +71,8 @@ DriverDeployment PSADT
         |
         v
 HPIA install using frozen SPList
+        |
+        +-- success/restart --> snapshot-specific .deployed marker
 ```
 
 ## ForceAll path
@@ -103,13 +105,14 @@ C:\HPIA\
 
 ## State ownership
 
-Evaluation state belongs to DriverEvaluator under `IAReport\Snapshots`. Deployment handoff state belongs to the DriverDeployer/DriverDeployment workflow under `IAReport\Deployment`. Persisted interactive defer state belongs to PSADT under its `DeferHistory` registry namespace.
+Evaluation state belongs to DriverEvaluator under `IAReport\Snapshots`. The snapshot-specific `.deployed` completion marker is written by DriverDeployment after a successful/restart deployment result and retained with the corresponding snapshot. Deployment handoff state belongs to the DriverDeployer/DriverDeployment workflow under `IAReport\Deployment`. Persisted interactive defer state belongs to PSADT under its `DeferHistory` registry namespace.
 
 ## Design invariants
 
 - Normal execution is explicit opt-in / fail-closed.
 - DriverEvaluator never installs or downloads SoftPaq binaries.
 - A committed SPList is a frozen deployment input.
+- A matching `.deployed` marker makes the snapshot idempotent for later Normal executions.
 - Exclusions are enforced at evaluation and immediately before Normal/ForceRun deployment.
 - Pilot is immediate; Broad is delayed from the snapshot timestamp.
 - New deployment handoff is not created while another PSADT deployment is active.
