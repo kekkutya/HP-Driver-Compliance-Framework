@@ -2,7 +2,7 @@
 
 ## Cél
 
-A `DriverDeployer.ps1` a HP-DCF rollout eligibility, deferred-resume és deployment-handoff komponense.
+A `DriverDeployer.ps1` a HP-DCF rollout jogosultságát kezelő, elhalasztott telepítést folytató és telepítési átadást végző komponense.
 
 ```text
 C:\HPIA\Automation\DriverDeployer.ps1
@@ -14,15 +14,15 @@ Normal/`-ForceRun` esetén a dedikált DriverDeployment PSADT-t indítja. `-Forc
 
 1. Framework/Deployer konfiguráció beolvasása.
 2. Framework és DriverDeployer `Enabled=1` megkövetelése.
-3. Persistált PSADT defer state vizsgálata; a deferred resume elsőbbséget élvez az új snapshot kiválasztásával szemben.
-4. Feloldatlan `Deployment.active` mellett nincs új handoff.
+3. A megőrzött PSADT elhalasztási állapot vizsgálata; az elhalasztott telepítés folytatása elsőbbséget élvez az új snapshot kiválasztásával szemben.
+4. Feloldatlan `Deployment.active` mellett nincs új átadás.
 5. Legfrissebb teljes Evaluation snapshot kiválasztása.
-6. 0 recommendation esetén `NoRecommendations`.
-7. Pilot/Broad eligibility.
+6. 0 ajánlás esetén `NoRecommendations`.
+7. Pilot/Broad jogosultság.
 8. Aktuális `ExcludeSoftPaqs` újraalkalmazása.
-9. Globális PSADT busy ellenőrzés.
-10. HP connectivity preflight.
-11. Deployment handoff + ownership létrehozása.
+9. Másik aktív PSADT ellenőrzése.
+10. A HP-kapcsolat előzetes ellenőrzése.
+11. A telepítési átadás és foglalás létrehozása.
 12. DriverDeployment PSADT indítása.
 
 ## Ringek
@@ -32,27 +32,27 @@ Ring           = Broad
 BroadDelayDays = 21
 ```
 
-Pilot azonnali. Broad eligibility = snapshot timestamp + `BroadDelayDays`.
+A Pilot azonnal telepítésre jogosult, és a `BroadDelayDays` értékét figyelmen kívül hagyja. A Broad telepítési jogosultsága = snapshot időbélyege + `BroadDelayDays`.
 
 ## `-ForceRun`
 
-Valid snapshotot igényel, de megkerüli az enablementet és ring delayt. Exclusion és aktív/deferred deployment védelem megmarad.
+Érvényes snapshotot igényel, de megkerüli az engedélyezést és a ring szerinti késleltetést. A kizárás, valamint az aktív és elhalasztott telepítések védelme megmarad.
 
 ## `-ForceAll`
 
-Snapshot és SPList nélkül, exclusion/ring/enablement bypass-szal, PSADT nélkül közvetlen HPIA full AutoInstallable remediationt futtat. A `0`, `256`, `1641`, `3010` sikeres kimenet; `3020`, `4098`, `4099` és ismeretlen kód hiba. Siker után törli a korábbi HP-DCF snapshot/handoff és kapcsolódó DriverDeployment defer state-et.
+Snapshot és SPList nélkül, a kizárás, a ring és az engedélyezés megkerülésével, PSADT nélkül közvetlen HPIA full AutoInstallable helyreállítást futtat. A `0`, `256`, `1641`, `3010` sikeres kimenet; a `3020`, `4098`, `4099` és az ismeretlen kód hibát jelent. Siker után törli a korábbi HP-DCF snapshot- és átadási állapotot, valamint a kapcsolódó DriverDeployment elhalasztási állapotát.
 
-## Deferred resume
+## Elhalasztott telepítés folytatása
 
-A Deployer a telepített DriverDeployment PSADT metadata alapján meghatározza az InstallName-et és ellenőrzi:
+A Deployer a telepített DriverDeployment PSADT metaadatai alapján meghatározza az InstallName értékét, és ellenőrzi:
 
 ```text
 HKLM\SOFTWARE\PSAppDeployToolkit\DeferHistory\<InstallName>
 ```
 
-Meglévő defer state esetén ezt folytatja új snapshot helyett. Másik aktív PSADT mellett későbbi futásra halasztja a resume-ot.
+Meglévő elhalasztási állapot esetén ezt folytatja új snapshot kiválasztása helyett. Másik aktív PSADT mellett a folytatást egy későbbi futásra halasztja.
 
-## Handoff
+## Telepítési átadás
 
 ```text
 C:\HPIA\IAReport\Deployment\Deployment.request.json
@@ -60,11 +60,11 @@ C:\HPIA\IAReport\Deployment\Deployment.splist.txt
 C:\HPIA\IAReport\Deployment\Deployment.active
 ```
 
-A deployment SPList a frozen snapshot SoftPaqjait tartalmazza az aktuális exclusion újraalkalmazása után. Az active marker közvetlenül PSADT launch előtt jön létre; launch failure esetén a Deployer eltávolítja.
+A telepítési SPList a rögzített snapshot SoftPaqjait tartalmazza az aktuális kizárás újbóli alkalmazása után. A `Deployment.active` jelzőfájl közvetlenül a PSADT indítása előtt jön létre; indítási hiba esetén a Deployer eltávolítja.
 
-## Connectivity preflight
+## Kapcsolat előzetes ellenőrzése
 
-Új Normal/ForceRun handoff előtt rövid HEAD kérés ellenőrzi a HP HPIA endpoint elérhetőségét. Sikertelen preflight esetén nincs handoff, egy későbbi futás újrapróbálhatja.
+Új Normal/ForceRun átadás előtt egy rövid HEAD kérés ellenőrzi a HP HPIA végpont elérhetőségét. Sikertelen előzetes ellenőrzés esetén nincs átadás; egy későbbi futás újrapróbálhatja.
 
 ## Log
 
@@ -72,4 +72,4 @@ A deployment SPList a frozen snapshot SoftPaqjait tartalmazza az aktuális exclu
 C:\HPIA\IAReport\DriverDeployer-<ComputerName>.log
 ```
 
-A végső `SUMMARY|...` tartalmazza a mode-ot, outcome-ot, reason-t, snapshot execution ID-t, effektív SoftPaq számot és durationt.
+A végső `SUMMARY|...` tartalmazza a módot, az eredményt, az okot, a snapshot végrehajtási azonosítóját, a ténylegesen telepítendő SoftPaqok számát és a futási időt.

@@ -135,3 +135,5 @@ src\ADMX\
 ```
 
 The current ADMX exposes the framework enable/exclusion settings, DriverEvaluator schedule settings, and DriverDeployer enable/ring/Broad-delay settings described above.
+
+Administrative Template policy descriptions display the corresponding built-in default values for visibility. If a policy is not configured, no registry override is applied and the framework uses the built-in default.

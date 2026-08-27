@@ -16,11 +16,11 @@ Get-ScheduledTask -TaskName "HP Driver Compliance Framework"
 Get-ScheduledTaskInfo -TaskName "HP Driver Compliance Framework"
 ```
 
-## Nincs új Evaluator log
+## Nincs új Evaluator-napló
 
-Ez lehet teljesen normális. Disabled framework, nem eligible schedule vagy már meglévő aktuális success marker esetén az Evaluator szándékosan a logging/I/O előtt, minimális efforttal kilép.
+Ez lehet teljesen normális. Letiltott framework, nem jogosult ütemezés vagy már meglévő aktuális `.success` jelzőfájl esetén az Evaluator szándékosan a naplózási és egyéb I/O-műveletek előtt, minimális erőforrás-ráfordítással kilép.
 
-Diagnosztikai teljes evaluation:
+Teljes diagnosztikai kiértékelés:
 
 ```powershell
 C:\HPIA\Automation\DriverEvaluator.ps1 -ForceRun
@@ -32,27 +32,27 @@ C:\HPIA\Automation\DriverEvaluator.ps1 -ForceRun
 Get-ChildItem "C:\HPIA\IAReport\Snapshots"
 ```
 
-Teljes sikeres snapshot: egymáshoz tartozó `.manifest.json`, `.splist.txt`, `.success`. A 0 recommendation is valid; ilyenkor a Deployer `NoRecommendations` eredménnyel PSADT nélkül kilép.
+Teljes sikeres snapshot: egymáshoz tartozó `.manifest.json`, `.splist.txt` és `.success` fájl. A 0 ajánlást tartalmazó snapshot is érvényes; ilyenkor a Deployer `NoRecommendations` eredménnyel, PSADT indítása nélkül kilép.
 
-## Deployer NoAction okok
+## A Deployer NoAction eredményének okai
 
-Log:
+Napló:
 
 ```text
 C:\HPIA\IAReport\DriverDeployer-<ComputerName>.log
 ```
 
-Gyakori reasonök: `FrameworkDisabled`, `DriverDeployerDisabled`, `NoValidSnapshot`, `NoRecommendations`, `RingNotEligible`, `NoApplicableSoftPaqs`, `PSADTBusy`, `NoInternetConnection`, `DeploymentActive`.
+Gyakori okok: `FrameworkDisabled`, `DriverDeployerDisabled`, `NoValidSnapshot`, `NoRecommendations`, `RingNotEligible`, `NoApplicableSoftPaqs`, `PSADTBusy`, `NoInternetConnection`, `DeploymentActive`.
 
-## Deferred deployment
+## Elhalasztott telepítés
 
 ```text
 HKLM\SOFTWARE\PSAppDeployToolkit\DeferHistory
 ```
 
-Matching defer state esetén a Deployer ezt resume-olja az új snapshot előtt. Másik aktív PSADT mellett későbbre halasztja.
+A DriverDeploymenthez tartozó elhalasztási állapot esetén a Deployer ezt folytatja az új snapshot feldolgozása előtt. Másik aktív PSADT mellett a folytatást későbbre halasztja.
 
-## Handoff
+## Telepítési átadás
 
 ```text
 C:\HPIA\IAReport\Deployment\Deployment.request.json
@@ -60,24 +60,24 @@ C:\HPIA\IAReport\Deployment\Deployment.splist.txt
 C:\HPIA\IAReport\Deployment\Deployment.active
 ```
 
-Matching defer state nélküli `Deployment.active` blokkolja az új Normal/ForceRun deploymentet; ezt nem célszerű vakon törölni.
+A DriverDeploymenthez tartozó elhalasztási állapot nélküli `Deployment.active` blokkolja az új Normal/ForceRun telepítést; ezt nem célszerű ellenőrzés nélkül törölni.
 
 ## Ring
 
-Ha a registryben nincs `BroadDelayDays`, a built-in default 21. Az effektív delay és a számított `Ring eligible at` időpont a Deployer logban látszik.
+Ha a registryben nincs `BroadDelayDays`, a beépített alapérték 21 nap. A tényleges késleltetés és a számított `Ring eligible at` időpont a Deployer naplójában látszik.
 
-## HPIA exit code-ok
+## HPIA kilépési kódok
 
 ```text
-0     success
-256   nincs alkalmazható recommendation
-1641  success; restart elindult
-3010  success; restart szükséges
-3020  egy vagy több SoftPaq install sikertelen
+0     sikeres
+256   nincs alkalmazható ajánlás
+1641  sikeres; az újraindítás elindult
+3010  sikeres; újraindítás szükséges
+3020  egy vagy több SoftPaq telepítése sikertelen
 4098  nincs internetkapcsolat
-4099  invalid SoftPaq number
+4099  érvénytelen SoftPaq-szám
 ```
 
 ## Store/MSIX PowerShell megjegyzés
 
-A rekurzív HKLM registry törlés Microsoft Store/MSIX PowerShell 7.6.5 alatt `Requested registry access is not allowed` hibát adott, miközben Windows PowerShell 5.1 és MSI-s PowerShell 7.6.5 alatt ugyanaz a művelet működött. Hasonló registry-provider hiba esetén először ellenőrizd a tényleges `pwsh.exe` útvonalát.
+A rekurzív HKLM registry-törlés Microsoft Store/MSIX PowerShell 7.6.5 alatt `Requested registry access is not allowed` hibát adott, miközben Windows PowerShell 5.1 és MSI-s PowerShell 7.6.5 alatt ugyanaz a művelet működött. Hasonló registry-provider hiba esetén először ellenőrizd a tényleges `pwsh.exe` útvonalát.

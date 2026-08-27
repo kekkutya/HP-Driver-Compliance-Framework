@@ -1,15 +1,15 @@
 # Architektúra
 
-A HP Driver Compliance Framework különválasztja az **evaluation**, **deployment eligibility** és **interaktív telepítés** fázisát. Így egy adott időpontban létrehozott HP recommendation set ringeken keresztül úgy telepíthető később, hogy közben ne sodródjon automatikusan újabb SoftPaq verziókra.
+A HP Driver Compliance Framework különválasztja a **kiértékelés**, a **telepítési jogosultság** és az **interaktív telepítés** fázisát. Így egy adott időpontban létrehozott HP-ajánlások készlete ringeken keresztül később úgy telepíthető, hogy közben ne sodródjon automatikusan újabb SoftPaq-verziókra.
 
 ## Fő komponensek
 
-- **HP CMSL** — framework setup és HPIA lifecycle.
-- **HPIA** — device analysis és tényleges remediation.
-- **DriverEvaluator** — list-only evaluation és snapshot producer.
-- **DriverDeployer** — snapshot selection, ring/exclusion gate, defer resume és handoff.
-- **DriverDeployment PSADT** — Normal/ForceRun interaktív/deferred install layer.
-- **Framework PSADT** — HP-DCF install/repair/uninstall és Scheduled Task.
+- **HP CMSL** — a framework telepítése és a HPIA életciklus-kezelése.
+- **HPIA** — eszközelemzés és tényleges helyreállítás.
+- **DriverEvaluator** — csak listázást végző kiértékelés és snapshot létrehozása.
+- **DriverDeployer** — snapshot-kiválasztás, ring- és exclusion-ellenőrzés, az elhalasztott telepítés folytatása és átadás.
+- **DriverDeployment PSADT** — a Normal/ForceRun mód interaktív és elhalasztható telepítési rétege.
+- **Framework PSADT** — a HP-DCF telepítése, javítása és eltávolítása, valamint a Scheduled Task kezelése.
 
 ## Scheduled Task orchestration
 
@@ -21,7 +21,7 @@ Multiple instances: IgnoreNew
 Start when available: True
 ```
 
-Szekvenciális actionök:
+Szekvenciális műveletek:
 
 ```text
 1. DriverEvaluator.ps1
@@ -33,17 +33,17 @@ Szekvenciális actionök:
 ```text
 Logon + 3 perc
    -> DriverEvaluator
-      -> eligibility
+      -> jogosultság
       -> HPIA Analyze/List
-      -> exclusion
-      -> frozen SPList + manifest + success
+      -> kizárás
+      -> rögzített SPList + manifest + .success
    -> DriverDeployer
-      -> deferred resume / snapshot selection
-      -> ring + exclusion + PSADT-busy + connectivity gate
-      -> Deployment.* handoff
+      -> elhalasztott telepítés folytatása / snapshot-kiválasztás
+      -> ring + kizárás + PSADT-busy + kapcsolat-ellenőrzés
+      -> Deployment.* átadás
    -> DriverDeployment PSADT
-      -> user prompt / defer
-      -> HPIA install a frozen SPList alapján
+      -> felhasználói párbeszéd / elhalasztás
+      -> HPIA-telepítés a rögzített SPList alapján
 ```
 
 ## ForceAll
@@ -52,11 +52,11 @@ Logon + 3 perc
 DriverDeployer -ForceAll
    -> nincs snapshot/SPList
    -> nincs PSADT
-   -> közvetlen HPIA full AutoInstallable remediation
-   -> siker után korábbi snapshot/handoff/defer state cleanup
+   -> közvetlen HPIA full AutoInstallable helyreállítás
+   -> siker után a korábbi snapshot-/átadási/elhalasztási állapot tisztítása
 ```
 
-## Runtime struktúra
+## Futásidejű struktúra
 
 ```text
 C:\HPIA\
@@ -70,10 +70,10 @@ C:\HPIA\
 
 ## Alapelvek
 
-- Normal működés explicit opt-in / fail-closed.
+- A Normal működés explicit engedélyezést igényel, alapértelmezetten tiltott (fail-closed).
 - Evaluator nem tölt le és nem telepít SoftPaqot.
-- A committed SPList frozen deployment input.
-- Exclusion evaluationkor és közvetlen deployment előtt is érvényesül.
-- Pilot azonnali, Broad késleltetett.
-- Aktív másik PSADT mellett nincs új handoff.
-- ForceAll explicit közvetlen remediation útvonal.
+- A rögzített SPList a telepítés változatlan bemenete.
+- A kizárás a kiértékeléskor és közvetlenül a telepítés előtt is érvényesül.
+- A Pilot azonnali, a Broad késleltetett.
+- Másik aktív PSADT mellett nincs új átadás.
+- A ForceAll explicit, közvetlen helyreállítási útvonal.

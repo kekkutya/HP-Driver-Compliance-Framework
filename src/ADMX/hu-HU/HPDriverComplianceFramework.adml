@@ -2,7 +2,7 @@
 <policyDefinitionResources xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitionResources" revision="2.0" schemaVersion="1.0">
 
   <displayName>HP Driver Compliance Framework (HP-DCF)</displayName>
-  <description>Felügyeleti sablon a HP Driver Compliance Framework konfigurálásához.</description>
+  <description>Felügyeleti sablon a HP Driver Compliance Framework konfigurálásához. Sablonverzió: 1.0.1.</description>
 
   <resources>
 
@@ -14,30 +14,30 @@
       <string id="Category_DriverEvaluator">DriverEvaluator</string>
 
       <string id="Policy_Enabled">HP Driver Compliance Framework engedélyezése</string>
-      <string id="Explain_Enabled">A framework egészére vonatkozó normál végrehajtást szabályozza. Engedélyezve az Enabled=1 értéket írja és lehetővé teszi a normál futást. Letiltva az Enabled=0 értéket írja. Ha a registry érték hiányzik, a framework alapértelmezetten letiltott. A DriverEvaluator -ForceRun hibaelhárítási célból felülbírálhatja a hiányzó Enabled értéket és az Enabled=0 állapotot is. Csak a 0 és 1 REG_DWORD érték érvényes.</string>
+      <string id="Explain_Enabled">A framework egészére vonatkozó normál végrehajtást szabályozza. Engedélyezve az Enabled=1 értéket írja és lehetővé teszi a normál futást. Letiltva az Enabled=0 értéket írja. Ha a registry érték hiányzik, a framework alapértelmezetten letiltott. A DriverEvaluator -ForceRun hibaelhárítási célból felülbírálhatja a hiányzó Enabled értéket és az Enabled=0 állapotot is. Csak a 0 és 1 REG_DWORD érték érvényes. Beépített alapérték: letiltva.</string>
 
       <string id="Policy_ExcludeSoftPaqs">SoftPaq-ok kizárása</string>
-      <string id="Explain_ExcludeSoftPaqs">Vesszővel elválasztott SoftPaq-azonosítók sp prefix nélkül. A DriverEvaluator a snapshot commit előtt alkalmazza a listát, a DriverDeployer pedig Normal és -ForceRun módban közvetlenül deployment előtt ismét ellenőrzi. A -ForceAll szándékosan figyelmen kívül hagyja ezt a listát.</string>
+      <string id="Explain_ExcludeSoftPaqs">Vesszővel elválasztott SoftPaq-azonosítók sp prefix nélkül. A DriverEvaluator a snapshot rögzítése előtt alkalmazza a listát, a DriverDeployer pedig Normal és -ForceRun módban közvetlenül a telepítés előtt ismét ellenőrzi. A -ForceAll szándékosan figyelmen kívül hagyja ezt a listát. Beépített alapérték: nincs.</string>
 <string id="Policy_ScheduleMode">Ütemezési mód</string>
-      <string id="Explain_ScheduleMode">Meghatározza a DriverEvaluator ütemezési módját.</string>
+      <string id="Explain_ScheduleMode">Meghatározza a DriverEvaluator ütemezési módját. Beépített alapérték: Monthly.</string>
 
       <string id="Policy_MonthMode">Hónap mód</string>
-      <string id="Explain_MonthMode">Meghatározza, hogy havi ütemezés esetén mely hónapok legyenek jogosultak evaluationre.</string>
+      <string id="Explain_MonthMode">Meghatározza, hogy havi ütemezés esetén mely hónapok legyenek jogosultak evaluationre. Beépített alapérték: All.</string>
 
       <string id="Policy_SpecificMonths">Meghatározott hónapok</string>
-      <string id="Explain_SpecificMonths">A Specific hónap módhoz tartozó, vesszővel elválasztott hónapszámok. Érvényes értékek: 1-12.</string>
+      <string id="Explain_SpecificMonths">A Specific hónap módhoz tartozó, vesszővel elválasztott hónapszámok. Érvényes értékek: 1-12. Beépített alapérték: nincs.</string>
 
       <string id="Policy_WeeksOfMonth">Hónapon belüli hetek</string>
       <string id="Explain_WeeksOfMonth">Havi módban a konfigurált hétköznap hónapon belüli előfordulásai, vesszővel elválasztva. Érvényes értékek: 1,2,3,4,5,-1; a -1 az utolsó előfordulást jelenti. Példa: az 1,3 érték a konfigurált hétköznap első és harmadik előfordulását ütemezi. Beépített alapérték: 3.</string>
 
       <string id="Policy_WeekParity">Hetek párossága</string>
-      <string id="Explain_WeekParity">Heti ütemezés esetén meghatározza, hogy minden, csak páros vagy csak páratlan sorszámú hét legyen jogosult.</string>
+      <string id="Explain_WeekParity">Heti ütemezés esetén meghatározza, hogy minden, csak páros vagy csak páratlan sorszámú hét legyen jogosult. Beépített alapérték: All.</string>
 
       <string id="Policy_DayOfWeek">A hét napja</string>
-      <string id="Explain_DayOfWeek">Meghatározza az evaluation ütemezett hétköznapját. Beépített alapérték: szerda.</string>
+      <string id="Explain_DayOfWeek">Meghatározza a kiértékelés ütemezett hétköznapját. Beépített alapérték: szerda.</string>
 
       <string id="Policy_RunOnOrAfter">Futtatás az ütemezett napon vagy azt követően</string>
-      <string id="Explain_RunOnOrAfter">Engedélyezve egy kihagyott konfigurált előfordulás később pótolható. Ha időközben egy későbbi konfigurált előfordulás dátuma is elérkezett, az újabb előfordulás felülírja a korábbi kihagyott előfordulást. Letiltva az evaluation kizárólag a konfigurált előfordulás pontos dátumán jogosult. Beépített alapérték: letiltva, a Broad evaluation policy szerint.</string>
+      <string id="Explain_RunOnOrAfter">Engedélyezve egy kihagyott konfigurált előfordulás később pótolható. Ha időközben egy későbbi konfigurált előfordulás dátuma is elérkezett, az újabb előfordulás felülírja a korábbi kihagyott előfordulást. Letiltva a kiértékelés kizárólag a konfigurált előfordulás pontos dátumán jogosult. Beépített alapérték: letiltva.</string>
 <string id="Enum_Monthly">Havi</string>
       <string id="Enum_Weekly">Heti</string>
 
@@ -64,13 +64,13 @@
 
       <string id="Category_DriverDeployer">DriverDeployer</string>
       <string id="Policy_DeployerEnabled">DriverDeployer engedélyezése</string>
-      <string id="Explain_DeployerEnabled">Explicit módon engedélyezi a DriverDeployer normál futását. Ha a policy nincs konfigurálva vagy le van tiltva, normál módban nem történik deployment. A -ForceRun és a -ForceAll felülbírálja ezt a komponensszintű beállítást. A framework-szintű Enabled policy marad a normál végrehajtás globális tiltókapcsolója.</string>
+      <string id="Explain_DeployerEnabled">Explicit módon engedélyezi a DriverDeployer normál futását. Ha a policy nincs konfigurálva vagy le van tiltva, normál módban nem történik telepítés. A -ForceRun és a -ForceAll felülbírálja ezt a komponensszintű beállítást. A framework-szintű Enabled policy marad a normál végrehajtás globális tiltókapcsolója. Beépített alapérték: letiltva.</string>
       <string id="Policy_Ring">Telepítési ring</string>
-      <string id="Explain_Ring">Meghatározza a deployment ringet. A Pilot a sikeres DriverEvaluator snapshot időbélyegétől azonnal deploy-eligible. A Broad a sikeres snapshot időbélyege után BroadDelayDays nappal válik deploy-eligible-lé. A beépített ring alapérték Broad, amely érvényes policy/registry override hiányában használatos. A -ForceRun és -ForceAll felülbírálja a ring eligibilityt.</string>
+      <string id="Explain_Ring">Meghatározza a telepítési ringet. A Pilot a sikeres DriverEvaluator snapshot időbélyegétől azonnal telepítésre jogosult, és figyelmen kívül hagyja a BroadDelayDays értéket. A Broad a sikeres snapshot időbélyege után BroadDelayDays nappal válik telepítésre jogosulttá. A -ForceRun és -ForceAll felülbírálja a ring szerinti jogosultságot. Beépített alapérték: Broad.</string>
       <string id="Ring_Pilot">Pilot</string>
       <string id="Ring_Broad">Broad</string>
       <string id="Policy_BroadDelayDays">Broad ring késleltetése (nap)</string>
-      <string id="Explain_BroadDelayDays">A sikeres DriverEvaluator snapshot időbélyegéhez hozzáadott napok száma a Broad ring deployment eligibility meghatározásához. Az érték policy/registry segítségével konfigurálható. Érvényes override hiányában a beépített 21 napos alapérték érvényes. Érvényes tartomány: 0-365.</string>
+      <string id="Explain_BroadDelayDays">A sikeres DriverEvaluator snapshot időbélyegéhez hozzáadott napok száma a Broad ring telepítési jogosultságának meghatározásához. Ez a beállítás csak Broad telepítési ring esetén érvényes; Pilot ring esetén figyelmen kívül marad. Érvényes tartomány: 0-365. Beépített alapérték: 21 nap.</string>
 
     </stringTable>
 

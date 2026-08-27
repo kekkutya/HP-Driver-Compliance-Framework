@@ -3,5 +3,8 @@
   "Components": {
     "DriverEvaluator": "1.0.0",
     "DriverDeployer": "1.0.0"
+  },
+  "Artifacts": {
+    "AdministrativeTemplate": "1.0.1"
   }
 }

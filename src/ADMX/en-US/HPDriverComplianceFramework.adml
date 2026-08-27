@@ -3,7 +3,7 @@
   xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitionResources">
 
   <displayName>HP Driver Compliance Framework (HP-DCF)</displayName>
-  <description>Administrative Template for HP Driver Compliance Framework configuration.</description>
+  <description>Administrative Template for HP Driver Compliance Framework configuration. Template version: 1.0.1.</description>
 
   <resources>
 
@@ -15,30 +15,30 @@
       <string id="Category_DriverEvaluator">DriverEvaluator</string>
 
       <string id="Policy_Enabled">Enable HP Driver Compliance Framework</string>
-      <string id="Explain_Enabled">Controls framework-wide execution. Enabled writes Enabled=1 and allows normal execution. Disabled writes Enabled=0. If the registry value is absent, the framework defaults to disabled. DriverEvaluator -ForceRun can override both a missing Enabled value and Enabled=0 for troubleshooting. Only REG_DWORD values 0 and 1 are valid.</string>
+      <string id="Explain_Enabled">Controls framework-wide execution. Enabled writes Enabled=1 and allows normal execution. Disabled writes Enabled=0. DriverEvaluator -ForceRun can override both a missing Enabled value and Enabled=0 for troubleshooting. Only REG_DWORD values 0 and 1 are valid. Built-in default: disabled.</string>
 
       <string id="Policy_ExcludeSoftPaqs">Excluded SoftPaqs</string>
-      <string id="Explain_ExcludeSoftPaqs">Framework-wide SoftPaq exclusion list used as an emergency block list. Enter comma-separated SoftPaq numbers, for example: 123456,234567. The documented format uses raw numbers without the SP prefix or .exe extension; DriverEvaluator also normalizes entries supplied with an SP prefix. DriverEvaluator removes matching recommendations before creating the effective SPList and manifest. DriverDeployer re-evaluates the same framework-level exclusion list immediately before creating the deployment handoff. If all detected recommendations are excluded, the resulting effective delta is empty and is treated as a successful no-action result.</string>
+      <string id="Explain_ExcludeSoftPaqs">Framework-wide SoftPaq exclusion list used as an emergency block list. Enter comma-separated SoftPaq numbers, for example: 123456,234567. The documented format uses raw numbers without the SP prefix or .exe extension; DriverEvaluator also normalizes entries supplied with an SP prefix. DriverEvaluator removes matching recommendations before creating the effective SPList and manifest. DriverDeployer re-evaluates the same framework-level exclusion list immediately before creating the deployment handoff. If all detected recommendations are excluded, the resulting effective delta is empty and is treated as a successful no-action result. Built-in default: none.</string>
 <string id="Policy_ScheduleMode">Schedule mode</string>
-      <string id="Explain_ScheduleMode">Selects monthly or weekly schedule evaluation.</string>
+      <string id="Explain_ScheduleMode">Selects monthly or weekly schedule evaluation. Built-in default: Monthly.</string>
 
       <string id="Policy_MonthMode">Month mode</string>
-      <string id="Explain_MonthMode">Controls which months are eligible in Monthly mode. Use Specific together with SpecificMonths.</string>
+      <string id="Explain_MonthMode">Controls which months are eligible in Monthly mode. Use Specific together with SpecificMonths. Built-in default: All.</string>
 
       <string id="Policy_SpecificMonths">Specific months</string>
-      <string id="Explain_SpecificMonths">Comma-separated month numbers used when MonthMode is Specific. Example: 1,4,7,10.</string>
+      <string id="Explain_SpecificMonths">Comma-separated month numbers used when MonthMode is Specific. Example: 1,4,7,10. Built-in default: none.</string>
 
       <string id="Policy_WeeksOfMonth">Weeks of month</string>
       <string id="Explain_WeeksOfMonth">Comma-separated occurrences of the configured weekday in Monthly mode. Valid values: 1,2,3,4,5,-1 where -1 means the last occurrence. Example: 1,3 schedules the first and third configured weekday. Built-in default: 3.</string>
 
       <string id="Policy_WeekParity">Week parity</string>
-      <string id="Explain_WeekParity">Controls eligible weeks in Weekly mode: all, even-numbered, or odd-numbered weeks.</string>
+      <string id="Explain_WeekParity">Controls eligible weeks in Weekly mode: all, even-numbered, or odd-numbered weeks. Built-in default: All.</string>
 
       <string id="Policy_DayOfWeek">Day of week</string>
-      <string id="Explain_DayOfWeek">Selects the weekday used by the DriverEvaluator schedule.</string>
+      <string id="Explain_DayOfWeek">Selects the weekday used by the DriverEvaluator schedule. Built-in default: Wednesday.</string>
 
       <string id="Policy_RunOnOrAfter">Retry on or after target day</string>
-      <string id="Explain_RunOnOrAfter">When enabled, a missed configured occurrence may be evaluated later. If a later configured occurrence has already been reached, the newer occurrence supersedes the older missed occurrence. When disabled, evaluation is eligible only on the exact configured occurrence date. Built-in default: disabled, matching the Broad evaluation policy.</string>
+      <string id="Explain_RunOnOrAfter">When enabled, a missed configured occurrence may be evaluated later. If a later configured occurrence has already been reached, the newer occurrence supersedes the older missed occurrence. When disabled, evaluation is eligible only on the exact configured occurrence date. Built-in default: disabled.</string>
 <string id="Enum_Monthly">Monthly</string>
       <string id="Enum_Weekly">Weekly</string>
 
@@ -65,13 +65,13 @@
 
       <string id="Category_DriverDeployer">DriverDeployer</string>
       <string id="Policy_DeployerEnabled">Enable DriverDeployer</string>
-      <string id="Explain_DeployerEnabled">Explicitly enables normal DriverDeployer execution. If this policy is not configured or is disabled, normal execution performs no deployment. -ForceRun and -ForceAll override this component-level setting. The framework-level Enabled policy remains the global normal-execution kill switch.</string>
+      <string id="Explain_DeployerEnabled">Explicitly enables normal DriverDeployer execution. If this policy is not configured or is disabled, normal execution performs no deployment. -ForceRun and -ForceAll override this component-level setting. The framework-level Enabled policy remains the global normal-execution kill switch. Built-in default: disabled.</string>
       <string id="Policy_Ring">Deployment ring</string>
-      <string id="Explain_Ring">Selects the deployment ring. Pilot is eligible immediately from the successful DriverEvaluator snapshot timestamp. Broad becomes eligible BroadDelayDays after the successful DriverEvaluator snapshot timestamp. The built-in ring default is Broad and is used when no valid policy/registry override is configured. -ForceRun and -ForceAll bypass ring eligibility.</string>
+      <string id="Explain_Ring">Selects the deployment ring. Pilot is eligible immediately from the successful DriverEvaluator snapshot timestamp and ignores BroadDelayDays. Broad becomes eligible BroadDelayDays after the successful DriverEvaluator snapshot timestamp. -ForceRun and -ForceAll bypass ring eligibility. Built-in default: Broad.</string>
       <string id="Ring_Pilot">Pilot</string>
       <string id="Ring_Broad">Broad</string>
       <string id="Policy_BroadDelayDays">Broad ring delay (days)</string>
-      <string id="Explain_BroadDelayDays">Number of days added to the successful DriverEvaluator snapshot timestamp for Broad ring eligibility. This value is configurable through policy/registry. If no valid override is configured, the built-in default of 21 days is used. Valid range: 0-365.</string>
+      <string id="Explain_BroadDelayDays">Number of days added to the successful DriverEvaluator snapshot timestamp for Broad ring eligibility. This setting applies only when the deployment ring is Broad and is ignored when the ring is Pilot. Valid range: 0-365. Built-in default: 21 days.</string>
 
     </stringTable>
 

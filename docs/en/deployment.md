@@ -82,6 +82,7 @@ HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
 Framework       1.0.0
 DriverEvaluator 1.0.0
 DriverDeployer  1.0.0
+Administrative Template  1.0.1
 ```
 
 The release workflow injects component-version placeholders and validates PowerShell syntax before packaging.

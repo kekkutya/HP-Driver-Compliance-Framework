@@ -46,6 +46,9 @@ jobs:
           $driverDeployerVersion =
               [string]$versionInfo.Components.DriverDeployer
 
+          $administrativeTemplateVersion =
+              [string]$versionInfo.Artifacts.AdministrativeTemplate
+
           if ([string]::IsNullOrWhiteSpace($frameworkVersion)) {
               throw "FrameworkVersion is missing from version.json."
           }
@@ -58,8 +61,36 @@ jobs:
               throw "Components.DriverDeployer is missing from version.json."
           }
 
+          if ([string]::IsNullOrWhiteSpace($administrativeTemplateVersion)) {
+              throw "Artifacts.AdministrativeTemplate is missing from version.json."
+          }
+
           if ($frameworkVersion -ne $tagVersion) {
               throw "Framework version mismatch. Git tag is [$tagVersion], but version.json contains [$frameworkVersion]."
+          }
+
+          $administrativeTemplateResources = @(
+              @{
+                  Path = "src\ADMX\en-US\HPDriverComplianceFramework.adml"
+                  VersionText = "Template version: $administrativeTemplateVersion."
+              },
+              @{
+                  Path = "src\ADMX\hu-HU\HPDriverComplianceFramework.adml"
+                  VersionText = "Sablonverzió: $administrativeTemplateVersion."
+              }
+          )
+
+          foreach ($resource in $administrativeTemplateResources) {
+              if (-not (Test-Path -LiteralPath $resource.Path -PathType Leaf)) {
+                  throw "Administrative Template resource [$($resource.Path)] was not found."
+              }
+
+              $resourceContent =
+                  Get-Content -LiteralPath $resource.Path -Raw
+
+              if (-not $resourceContent.Contains($resource.VersionText)) {
+                  throw "Administrative Template version mismatch in [$($resource.Path)]. Expected [$($resource.VersionText)]"
+              }
           }
 
           "framework_version=$frameworkVersion" >> $env:GITHUB_OUTPUT
@@ -68,10 +99,13 @@ jobs:
 
           "driver_deployer_version=$driverDeployerVersion" >> $env:GITHUB_OUTPUT
 
+          "administrative_template_version=$administrativeTemplateVersion" >> $env:GITHUB_OUTPUT
+
           Write-Host "Release tag: $tag"
           Write-Host "Framework version: $frameworkVersion"
           Write-Host "DriverEvaluator version: $driverEvaluatorVersion"
           Write-Host "DriverDeployer version: $driverDeployerVersion"
+          Write-Host "Administrative Template version: $administrativeTemplateVersion"
 
       - name: Inject component versions
         shell: pwsh
