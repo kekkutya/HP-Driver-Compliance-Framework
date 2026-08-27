@@ -23,9 +23,9 @@ C:\HPIA\DriverDeployment\Invoke-AppDeployToolkit.exe
 
 1. Read framework and DriverDeployer configuration.
 2. Require framework `Enabled=1` and DriverDeployer `Enabled=1`.
-3. Detect persisted DriverDeployment PSADT defer state; deferred resume takes precedence over new snapshot selection.
+3. Detect persisted DriverDeployment PSADT defer state; clear it as stale if its handoff snapshot is already deployed, otherwise deferred resume takes precedence over new snapshot selection.
 4. Refuse a new handoff while unresolved `Deployment.active` ownership exists.
-5. Select the latest complete Evaluation snapshot.
+5. Select the latest complete Evaluation snapshot and stop with `AlreadyDeployed` if it has a matching `.deployed` completion marker.
 6. Stop with `NoRecommendations` if its recommendation count is zero.
 7. Apply Pilot/Broad eligibility.
 8. Re-apply the current `ExcludeSoftPaqs` list.
@@ -77,7 +77,7 @@ DriverDeployer derives the DriverDeployment PSADT InstallName from the deployed 
 HKLM\SOFTWARE\PSAppDeployToolkit\DeferHistory\<InstallName>
 ```
 
-If defer state exists, resume takes precedence over selecting a new snapshot. If another PSADT process is active, the resume is left for a later execution; otherwise DriverDeployer starts the existing DriverDeployment package again.
+If defer state exists, DriverDeployer first checks whether the persisted handoff identifies a snapshot that already has a matching `.deployed` completion marker. Such state is stale and is cleared with `AlreadyDeployed`. Otherwise deferred resume takes precedence over selecting a new snapshot. If another PSADT process is active, the resume is left for a later execution; otherwise DriverDeployer starts the existing DriverDeployment package again.
 
 ## Deployment handoff
 
@@ -97,7 +97,7 @@ Deployment.active
 
 `Deployment.splist.txt` contains the frozen snapshot SoftPaq IDs after the current exclusion list has been re-applied. `Deployment.active` establishes ownership immediately before PSADT launch. If launch fails, DriverDeployer removes the newly created active marker.
 
-The DriverDeployment PSADT removes the handoff files after a final successful/restart result. A deferred deployment keeps its persisted PSADT defer state for later resume.
+After a final successful/restart result, DriverDeployment creates the snapshot-specific persistent `.deployed` completion marker before removing the transient handoff files. A deferred deployment keeps its persisted PSADT defer state and handoff for later resume.
 
 ## Connectivity preflight
 

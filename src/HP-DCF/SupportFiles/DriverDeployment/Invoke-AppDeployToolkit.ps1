@@ -90,7 +90,7 @@ $adtSession = @{
     # App variables.
     AppVendor = 'HP'
     AppName = 'DCF DriverDeployer'
-    AppVersion = '1.0.0'
+    AppVersion = '__DRIVER_DEPLOYER_VERSION__'
     AppArch = 'x86'
     AppLang = 'EN'
     AppRevision = '01'
@@ -305,6 +305,89 @@ $HPDCFDeploymentSPList = 'C:\HPIA\IAReport\Deployment\Deployment.splist.txt'
 $HPDCFHPIAExe = 'C:\HPIA\HP Image Assistant\HPImageAssistant.exe'
 $HPDCFHPIAReportFolder = 'C:\HPIA\IAReport'
 
+function Set-HPDCFDeploymentCompletedState
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [int]$HPIAExitCode,
+
+        [string]$DeploymentRequestFile = 'C:\HPIA\IAReport\Deployment\Deployment.request.json',
+
+        [string]$SnapshotFolder = 'C:\HPIA\IAReport\Snapshots'
+    )
+
+    if (-not (Test-Path -LiteralPath $DeploymentRequestFile -PathType Leaf))
+    {
+        return
+    }
+
+    $DeploymentRequest =
+        Get-Content -LiteralPath $DeploymentRequestFile -Raw -ErrorAction Stop |
+        ConvertFrom-Json -ErrorAction Stop
+
+    $SnapshotExecutionId =
+        [string]$DeploymentRequest.SnapshotExecutionId
+
+    if ([string]::IsNullOrWhiteSpace($SnapshotExecutionId))
+    {
+        return
+    }
+
+    $SnapshotManifest = Get-ChildItem `
+        -LiteralPath $SnapshotFolder `
+        -Filter '*.manifest.json' `
+        -File `
+        -ErrorAction Stop |
+        Where-Object {
+            try
+            {
+                $Manifest =
+                    Get-Content -LiteralPath $_.FullName -Raw -ErrorAction Stop |
+                    ConvertFrom-Json -ErrorAction Stop
+
+                [string]$Manifest.ExecutionId -eq $SnapshotExecutionId
+            }
+            catch
+            {
+                $false
+            }
+        } |
+        Select-Object -First 1
+
+    if ($null -eq $SnapshotManifest)
+    {
+        throw "Unable to resolve source snapshot for deployment execution ID [$SnapshotExecutionId]."
+    }
+
+    $DeployedMarker =
+        $SnapshotManifest.FullName -replace '\.manifest\.json$', '.deployed'
+
+    $DeployedMarkerContent = @(
+        "SnapshotExecutionId=$SnapshotExecutionId"
+        "DeployedAt=$((Get-Date).ToString('o'))"
+        "HPIAExitCode=$HPIAExitCode"
+    )
+
+    $DeployedMarkerTemp = "$DeployedMarker.tmp"
+
+    $DeployedMarkerContent |
+        Set-Content `
+            -LiteralPath $DeployedMarkerTemp `
+            -Encoding UTF8 `
+            -ErrorAction Stop
+
+    Move-Item `
+        -LiteralPath $DeployedMarkerTemp `
+        -Destination $DeployedMarker `
+        -Force `
+        -ErrorAction Stop
+
+    Write-ADTLogEntry -Message "Deployment completion marker created: [$DeployedMarker]"
+}
+
+
 function Install-ADTDeployment
 {
     [CmdletBinding()]
@@ -410,6 +493,10 @@ function Install-ADTDeployment
     ## <Perform Post-Installation tasks here>
 
     ## HPIA reached a successful or reboot-required final state.
+    ## Persist successful deployment completion for the source snapshot before
+    ## removing the transient deployment handoff state.
+    Set-HPDCFDeploymentCompletedState -HPIAExitCode $HPIAExitCode
+
     ## Remove the completed HP-DCF deployment handoff state.
     $HPDCFDeploymentStateFiles = @(
         'C:\HPIA\IAReport\Deployment\Deployment.active',

@@ -42,7 +42,7 @@ Evaluation-<period>.splist.txt
 Evaluation-<period>.success
 ```
 
-A zero-recommendation snapshot is valid; DriverDeployer will report `NoRecommendations` and will not start PSADT.
+A zero-recommendation snapshot is valid; DriverDeployer will report `NoRecommendations` and will not start PSADT. A matching `Evaluation-<period>.deployed` marker records that the snapshot has already reached a successful/restart deployment result; later Normal executions report `AlreadyDeployed` and do not start PSADT again.
 
 ## Deployer no-action reasons
 
@@ -52,7 +52,7 @@ Review:
 C:\HPIA\IAReport\DriverDeployer-<ComputerName>.log
 ```
 
-Common `Reason` values include `FrameworkDisabled`, `DriverDeployerDisabled`, `NoValidSnapshot`, `NoRecommendations`, `RingNotEligible`, `NoApplicableSoftPaqs`, `PSADTBusy`, `NoInternetConnection`, `DeploymentActive`, and `DeferredResume` for a resumed deployment start.
+Common `Reason` values include `FrameworkDisabled`, `DriverDeployerDisabled`, `NoValidSnapshot`, `NoRecommendations`, `AlreadyDeployed`, `RingNotEligible`, `NoApplicableSoftPaqs`, `PSADTBusy`, `NoInternetConnection`, `DeploymentActive`, and `DeferredResume` for a resumed deployment start.
 
 ## Deferred deployment
 
@@ -62,7 +62,7 @@ Check the DriverDeployment PSADT defer namespace:
 HKLM\SOFTWARE\PSAppDeployToolkit\DeferHistory
 ```
 
-When matching defer state exists, DriverDeployer resumes it before selecting a new snapshot. If another PSADT process is active, resume is deferred to a later framework execution.
+When matching defer state exists, DriverDeployer first checks the persisted handoff snapshot. If that snapshot already has a matching `.deployed` marker, the stale defer and handoff state are cleared with `AlreadyDeployed`. Otherwise the deferred deployment resumes before selecting a new snapshot. If another PSADT process is active, resume is deferred to a later framework execution.
 
 ## Deployment handoff
 

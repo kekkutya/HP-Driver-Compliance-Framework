@@ -14,9 +14,9 @@ Normal/`-ForceRun` esetén a dedikált DriverDeployment PSADT-t indítja. `-Forc
 
 1. Framework/Deployer konfiguráció beolvasása.
 2. Framework és DriverDeployer `Enabled=1` megkövetelése.
-3. A megőrzött PSADT elhalasztási állapot vizsgálata; az elhalasztott telepítés folytatása elsőbbséget élvez az új snapshot kiválasztásával szemben.
+3. A megőrzött PSADT elhalasztási állapot vizsgálata; ha az átadáshoz tartozó snapshot már telepített, az elavult állapot törlődik, egyébként az elhalasztott telepítés folytatása elsőbbséget élvez az új snapshot kiválasztásával szemben.
 4. Feloldatlan `Deployment.active` mellett nincs új átadás.
-5. Legfrissebb teljes Evaluation snapshot kiválasztása.
+5. Legfrissebb teljes Evaluation snapshot kiválasztása; egyező `.deployed` completion marker esetén `AlreadyDeployed` eredménnyel nincs új telepítés.
 6. 0 ajánlás esetén `NoRecommendations`.
 7. Pilot/Broad jogosultság.
 8. Aktuális `ExcludeSoftPaqs` újraalkalmazása.
@@ -50,7 +50,7 @@ A Deployer a telepített DriverDeployment PSADT metaadatai alapján meghatározz
 HKLM\SOFTWARE\PSAppDeployToolkit\DeferHistory\<InstallName>
 ```
 
-Meglévő elhalasztási állapot esetén ezt folytatja új snapshot kiválasztása helyett. Másik aktív PSADT mellett a folytatást egy későbbi futásra halasztja.
+Meglévő elhalasztási állapot esetén a Deployer először ellenőrzi, hogy a megőrzött átadás olyan snapshotra mutat-e, amelyhez már tartozik egyező `.deployed` completion marker. Az ilyen állapot elavult, ezért `AlreadyDeployed` eredménnyel eltávolításra kerül. Egyébként az elhalasztott telepítés folytatása elsőbbséget élvez az új snapshot kiválasztásával szemben. Másik aktív PSADT mellett a folytatást egy későbbi futásra halasztja.
 
 ## Telepítési átadás
 
@@ -60,7 +60,7 @@ C:\HPIA\IAReport\Deployment\Deployment.splist.txt
 C:\HPIA\IAReport\Deployment\Deployment.active
 ```
 
-A telepítési SPList a rögzített snapshot SoftPaqjait tartalmazza az aktuális kizárás újbóli alkalmazása után. A `Deployment.active` jelzőfájl közvetlenül a PSADT indítása előtt jön létre; indítási hiba esetén a Deployer eltávolítja.
+A telepítési SPList a rögzített snapshot SoftPaqjait tartalmazza az aktuális kizárás újbóli alkalmazása után. A `Deployment.active` jelzőfájl közvetlenül a PSADT indítása előtt jön létre; indítási hiba esetén a Deployer eltávolítja. Sikeres vagy újraindítást igénylő végállapot után a DriverDeployment először létrehozza a snapshothoz tartozó tartós `.deployed` completion markert, majd eltávolítja a tranzakciós átadási fájlokat. Elhalasztás esetén az átadási és PSADT defer állapot megmarad a későbbi folytatáshoz.
 
 ## Kapcsolat előzetes ellenőrzése
 

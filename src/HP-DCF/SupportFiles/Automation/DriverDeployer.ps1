@@ -18,6 +18,7 @@
       - Requires a complete valid Evaluation snapshot:
         .success + .manifest.json + .splist.txt.
       - Uses the latest valid snapshot, including occurrence-specific snapshots.
+      - Does not redeploy a snapshot with a matching .deployed completion marker.
       - Applies ring eligibility.
       - Re-applies the current framework ExcludeSoftPaqs list immediately before
         deployment.
@@ -94,12 +95,15 @@
       C:\HPIA\IAReport\Deployment\Deployment.splist.txt
       C:\HPIA\IAReport\Deployment\Deployment.active
 
+    Persistent deployment completion state:
+      C:\HPIA\IAReport\Snapshots\Evaluation-<yyyy-MM-Wn>.deployed
+
 .RETENTION
     DriverDeployer does not maintain evaluation snapshot history.
 
-    DriverEvaluator owns evaluation snapshot retention. Deployment.active,
-    Deployment.request.json and Deployment.splist.txt belong to the
-    deployment handoff workflow.
+    DriverEvaluator owns evaluation snapshot retention, including the persistent
+    .deployed completion marker. Deployment.active, Deployment.request.json and
+    Deployment.splist.txt belong to the transient deployment handoff workflow.
 
 .NOTES
     ComponentVersion is injected by the release workflow.
@@ -384,6 +388,62 @@ function Get-DriverDeploymentInstallName {
 }
 
 
+function Test-SnapshotDeployed {
+    param(
+        [Parameter(Mandatory)]
+        [string]$SnapshotExecutionId
+    )
+
+    if ([string]::IsNullOrWhiteSpace($SnapshotExecutionId)) {
+        return $false
+    }
+
+    foreach ($manifestFile in @(
+        Get-ChildItem `
+            -LiteralPath $SnapshotFolder `
+            -Filter "Evaluation-*.manifest.json" `
+            -File `
+            -ErrorAction SilentlyContinue
+    )) {
+        try {
+            $manifest =
+                Get-Content -LiteralPath $manifestFile.FullName -Raw -ErrorAction Stop |
+                ConvertFrom-Json -ErrorAction Stop
+
+            if ([string]$manifest.ExecutionId -ne $SnapshotExecutionId) {
+                continue
+            }
+
+            $deployedMarkerPath =
+                $manifestFile.FullName -replace '\.manifest\.json$', '.deployed'
+
+            if (-not (Test-Path -LiteralPath $deployedMarkerPath -PathType Leaf)) {
+                return $false
+            }
+
+            $deployedMarker = @{}
+
+            foreach ($line in Get-Content -LiteralPath $deployedMarkerPath -ErrorAction Stop) {
+                if ($line -match '^(?<k>[^=]+)=(?<v>.*)$') {
+                    $deployedMarker[$Matches.k] = $Matches.v
+                }
+            }
+
+            return (
+                $deployedMarker.ContainsKey("SnapshotExecutionId") -and
+                $deployedMarker["SnapshotExecutionId"] -eq $SnapshotExecutionId
+            )
+        }
+        catch {
+            Write-Log "Unable to validate deployed state for snapshot [$SnapshotExecutionId]: $($_.Exception.Message)" "WARNING"
+            return $false
+        }
+    }
+
+    return $false
+}
+
+
 function Get-DriverDeploymentDeferState {
     $metadata = Get-DriverDeploymentMetadata
     $installName = Get-DriverDeploymentInstallName -Metadata $metadata
@@ -477,7 +537,8 @@ function Clear-ForceAllPendingState {
         "Evaluation-*.manifest.json",
         "Evaluation-*.splist.txt",
         "Evaluation-*.success",
-        "Evaluation-*.failed"
+        "Evaluation-*.failed",
+        "Evaluation-*.deployed"
     )
 
     foreach ($pattern in $snapshotPatterns) {
@@ -604,7 +665,57 @@ try {
     }
 
     if ((-not $ForceAll) -and $null -ne $deferState -and $deferState.Present) {
-        Write-Log "Deferred DriverDeployment detected. Deferred deployment resume takes precedence over snapshot selection."
+        Write-Log "Deferred DriverDeployment detected."
+
+        $deferredSnapshotExecutionId = ""
+
+        if (Test-Path -LiteralPath $RequestFile -PathType Leaf) {
+            try {
+                $deferredRequest =
+                    Get-Content -LiteralPath $RequestFile -Raw -ErrorAction Stop |
+                    ConvertFrom-Json -ErrorAction Stop
+
+                $deferredSnapshotExecutionId =
+                    [string]$deferredRequest.SnapshotExecutionId
+            }
+            catch {
+                Write-Log "Unable to read deferred deployment request: $($_.Exception.Message)" "WARNING"
+            }
+        }
+
+        if (
+            -not [string]::IsNullOrWhiteSpace($deferredSnapshotExecutionId) -and
+            (Test-SnapshotDeployed -SnapshotExecutionId $deferredSnapshotExecutionId)
+        ) {
+            $SnapshotExecutionId = $deferredSnapshotExecutionId
+
+            Write-Log "Deferred DriverDeployment belongs to a snapshot that has already been deployed successfully. Clearing stale deferred state."
+
+            if (Test-Path -LiteralPath $deferState.RegistryPath -PathType Container) {
+                Write-Log "Removing stale DriverDeployment PSADT defer state: [$($deferState.RegistryPath)]"
+                Remove-Item `
+                    -LiteralPath $deferState.RegistryPath `
+                    -Recurse `
+                    -Force `
+                    -ErrorAction Stop
+            }
+
+            foreach ($file in @($RequestFile,$DeploymentSPListFile,$ActiveFlagFile)) {
+                if (Test-Path -LiteralPath $file -PathType Leaf) {
+                    Write-Log "Removing stale deployment handoff state: [$file]"
+                    Remove-Item `
+                        -LiteralPath $file `
+                        -Force `
+                        -ErrorAction Stop
+                }
+            }
+
+            $Reason = "AlreadyDeployed"
+            Write-Log "Stale deferred deployment state cleared. No action."
+            return
+        }
+
+        Write-Log "Deferred deployment resume takes precedence over snapshot selection."
 
         if (Test-PSADTBusy) {
             $Reason = "PSADTBusy"
@@ -640,6 +751,12 @@ try {
     Write-Log "Selected snapshot execution ID: [$SnapshotExecutionId]"
     Write-Log "Selected manifest: [$($snapshot.ManifestPath)]"
     Write-Log "Selected SPList: [$($snapshot.SPListPath)]"
+
+    if (-not $ForceRun -and (Test-SnapshotDeployed -SnapshotExecutionId $SnapshotExecutionId)) {
+        $Reason = "AlreadyDeployed"
+        Write-Log "Selected snapshot has already been deployed successfully. No action."
+        return
+    }
 
     if ([int]$snapshot.Manifest.RecommendationCount -eq 0) {
         $Reason="NoRecommendations"

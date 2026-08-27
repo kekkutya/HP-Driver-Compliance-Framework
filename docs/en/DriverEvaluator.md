@@ -72,6 +72,8 @@ Evaluation-2026-08-W3.splist.txt
 Evaluation-2026-08-W3.success
 ```
 
+After a successful deployment of the snapshot, DriverDeployment adds the persistent `.deployed` completion marker. The `.deployed` marker is not required for evaluation completeness; it records that the snapshot has subsequently reached a successful or restart-required deployment result.
+
 Failure marker:
 
 ```text
@@ -80,7 +82,7 @@ Evaluation-2026-08-W3.failed
 
 A complete successful snapshot requires the matching `.manifest.json`, `.splist.txt`, and `.success` files. The SPList freezes the exact SoftPaq IDs evaluated at that point in time; DriverDeployer does not replace them with newer recommendations later.
 
-Occurrence suffixes include `W1` (first), `W3` (third), and `WL` (last). The latest six snapshot artifact groups are retained by default.
+Occurrence suffixes include `W1` (first), `W3` (third), and `WL` (last). The latest six snapshot artifact groups are retained by default, including any matching `.deployed` completion marker.
 
 ## Logging
 
