@@ -50,11 +50,11 @@ Eltávolítja a Scheduled Taskot, a HP-DCF runtime-ot és a framework teljes kon
 
 ## Verziózás
 
-v1.0.1:
+v1.0.3:
 
 ```text
-Framework       1.0.1
+Framework       1.0.3
 DriverEvaluator 1.0.0
-DriverDeployer  1.0.0
+DriverDeployer  1.0.1
 Administrative Template  1.0.1
 ```

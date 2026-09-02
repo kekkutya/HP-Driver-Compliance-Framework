@@ -107,6 +107,11 @@ jobs:
           Write-Host "DriverDeployer version: $driverDeployerVersion"
           Write-Host "Administrative Template version: $administrativeTemplateVersion"
 
+      - name: Verify documentation versions
+        shell: pwsh
+        run: |
+          .\tools\Sync-VersionReferences.ps1 -Check
+
       - name: Inject release versions
         shell: pwsh
         run: |
