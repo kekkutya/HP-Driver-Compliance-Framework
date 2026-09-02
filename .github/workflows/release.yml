@@ -179,15 +179,45 @@ jobs:
                       $version
                   )
 
-              Set-Content `
-                  -LiteralPath $path `
-                  -Value $content `
-                  -Encoding UTF8
+              $utf8WithBom =
+                  [System.Text.UTF8Encoding]::new($true)
+
+              [System.IO.File]::WriteAllText(
+                  $path,
+                  $content,
+                  $utf8WithBom
+              )
           }
 
       - name: Verify release scripts
         shell: pwsh
         run: |
+          $versionedScriptPaths = @(
+              "src\HP-DCF\SupportFiles\Automation\DriverEvaluator.ps1",
+              "src\HP-DCF\SupportFiles\Automation\DriverDeployer.ps1",
+              "src\HP-DCF\Invoke-AppDeployToolkit.ps1",
+              "src\HP-DCF\SupportFiles\DriverDeployment\Invoke-AppDeployToolkit.ps1"
+          )
+
+          foreach ($path in $versionedScriptPaths) {
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+                  throw "Versioned PowerShell script not found: $path"
+              }
+
+              $bytes = [System.IO.File]::ReadAllBytes($path)
+
+              if (
+                  $bytes.Length -lt 3 -or
+                  $bytes[0] -ne 0xEF -or
+                  $bytes[1] -ne 0xBB -or
+                  $bytes[2] -ne 0xBF
+              ) {
+                  throw "Versioned PowerShell script is not UTF-8 with BOM: $path"
+              }
+
+              Write-Host "UTF-8 BOM verified: $path"
+          }
+
           $components = @(
               @{
                   Path =
