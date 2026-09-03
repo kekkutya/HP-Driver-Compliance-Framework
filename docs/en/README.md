@@ -1,6 +1,6 @@
 # HP Driver Compliance Framework Documentation
 
-This directory contains the canonical English technical documentation for **HP Driver Compliance Framework (HP-DCF) v1.0.3**.
+This directory contains the canonical English technical documentation for **HP Driver Compliance Framework (HP-DCF) v1.0.4**.
 
 The framework separates HP update evaluation from deployment:
 
@@ -20,6 +20,7 @@ DriverDeployer
 
 ## Documents
 
+- [Quick Start](quick-start.md)
 - [Architecture](architecture.md)
 - [Configuration reference](configuration.md)
 - [DriverEvaluator](DriverEvaluator.md)

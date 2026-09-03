@@ -17,7 +17,7 @@ C:\HPIA\DriverDeployment\Invoke-AppDeployToolkit.exe
 -DeploymentType Install -DeployMode Interactive
 ```
 
-`-ForceAll` is different: it bypasses PSADT and invokes HPIA directly.
+Normal and `-ForceRun` do not update HPIA before deployment; they deploy the frozen evaluation result. `-ForceAll` is different: it bypasses PSADT, verifies/updates HPIA first, and then invokes HPIA directly.
 
 ## Normal execution
 
@@ -64,6 +64,9 @@ DriverDeployer.ps1 -ForceAll
 - does not use an Evaluation snapshot or SPList;
 - bypasses framework/component enablement, ring delay and `ExcludeSoftPaqs`;
 - bypasses PSADT and invokes HPIA directly;
+- verifies the current HPIA release and installs/updates HPIA when required before direct remediation;
+- logs the full HPIA file version actually used for ForceAll;
+- does not start remediation if the HPIA release check or required installation/update fails;
 - uses the fixed Drivers/Software/Firmware/Accessories, `AutoInstallable`, `Action:Install` scope;
 - treats HPIA `0`, `256`, `1641`, and `3010` as successful outcomes (the latter two are restart outcomes);
 - treats `3020`, `4098`, `4099`, and unknown exit codes as failures;

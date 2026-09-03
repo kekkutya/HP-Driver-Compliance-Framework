@@ -1,10 +1,18 @@
 # Telepítés
 
+## Előfeltételek
+
+A célgépen a Windows Package Managernek (`winget`) telepítve és működőképes állapotban kell lennie. A HP-DCF a framework telepítése és javítása során Wingetet használ a HP CMSL telepítéséhez vagy frissítéséhez. Ha a szükséges Winget csomagműveletek nem érhetők el, a framework telepítése nem tud sikeresen befejeződni.
+
+A célgépnek el kell érnie a HP CMSL és HPIA működéséhez szükséges HP szolgáltatásokat is.
+
 ## Framework telepítése
 
 A framework PSADT telepíti vagy frissíti a HP CMSL-t és a HPIA-t, létrehozza a `C:\HPIA` runtime-ot, kimásolja az Automation és DriverDeployment fájljait, regisztrálja a Scheduled Taskot, és létrehozza az alkalmazás detektálási registry kulcsát.
 
 A telepítés önmagában **nem engedélyezi** a normál kiértékelést vagy telepítést; az `Enabled` beépített alapértékei `False` értékűek.
+
+Minimális Pilot üzembe helyezéshez lásd a [Gyors üzembe helyezés](quick-start.md) dokumentumot.
 
 ## Scheduled Task
 
@@ -50,11 +58,11 @@ Eltávolítja a Scheduled Taskot, a HP-DCF runtime-ot és a framework teljes kon
 
 ## Verziózás
 
-v1.0.3:
+v1.0.4:
 
 ```text
-Framework       1.0.3
-DriverEvaluator 1.0.0
-DriverDeployer  1.0.1
+Framework       1.0.4
+DriverEvaluator 1.0.1
+DriverDeployer  1.0.2
 Administrative Template  1.0.1
 ```

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`DriverEvaluator.ps1` is the evaluation component of HP-DCF. It creates a validated point-in-time snapshot of applicable HP AutoInstallable recommendations for later deployment decisions. It never downloads or installs SoftPaq binaries.
+`DriverEvaluator.ps1` is the evaluation component of HP-DCF. It creates a validated point-in-time snapshot of applicable HP AutoInstallable recommendations for later deployment decisions. It never downloads or installs recommendation SoftPaq binaries. HPIA lifecycle maintenance may download and extract the HPIA SoftPaq before evaluation.
 
 Runtime path:
 
@@ -33,12 +33,16 @@ Normal execution performs inexpensive local eligibility checks first. When the f
 3. Resolve the current eligible schedule occurrence.
 4. Skip an occurrence already completed successfully.
 5. Acquire the evaluator mutex.
-6. Run HPIA Analyze/List.
-7. Validate the new HPIA JSON report and recommendation data.
-8. Apply `ExcludeSoftPaqs`.
-9. Commit the SPList and manifest.
-10. Create the `.success` marker, or `.failed` on a failed evaluation path.
-11. Apply snapshot retention.
+6. Verify that the current HPIA release is installed; install/update HPIA if required.
+7. Record the actual HPIA file version used for evaluation.
+8. Run HPIA Analyze/List.
+9. Validate the new HPIA JSON report and recommendation data.
+10. Apply `ExcludeSoftPaqs`.
+11. Commit the SPList and manifest.
+12. Create the `.success` marker, or `.failed` on a failed evaluation path.
+13. Apply snapshot retention.
+
+The HPIA release check runs only after DriverEvaluator reaches the actual evaluation path. If the required HP CMSL commands are unavailable, HP update information cannot be retrieved, or a required HPIA installation/update fails, evaluation fails and does not continue with a potentially outdated HPIA.
 
 A successful evaluation with zero recommendations is still a valid snapshot.
 
@@ -80,6 +84,8 @@ Failure marker:
 Evaluation-2026-08-W3.failed
 ```
 
+The manifest records the full HPIA file version actually used for evaluation in the `HPIAVersion` field.
+
 A complete successful snapshot requires the matching `.manifest.json`, `.splist.txt`, and `.success` files. The SPList freezes the exact SoftPaq IDs evaluated at that point in time; DriverDeployer does not replace them with newer recommendations later.
 
 Occurrence suffixes include `W1` (first), `W3` (third), and `WL` (last). The latest six snapshot artifact groups are retained by default, including any matching `.deployed` completion marker.
@@ -92,7 +98,7 @@ Full evaluation log:
 C:\HPIA\IAReport\DriverEvaluator-<ComputerName>.log
 ```
 
-A completed evaluation ends with a machine-readable `SUMMARY|...` record including component version, recommendation counts, total duration, HPIA duration and HPIA exit code.
+The log records the HPIA release-check result and the full HPIA file version actually used for evaluation. A completed evaluation ends with a machine-readable `SUMMARY|...` record including component version, recommendation counts, total duration, HPIA duration and HPIA exit code.
 
 ## Relationship to DriverDeployer
 

@@ -6,7 +6,7 @@ A HP Driver Compliance Framework különválasztja a **kiértékelés**, a **tel
 
 - **HP CMSL** — a framework telepítése és a HPIA életciklus-kezelése.
 - **HPIA** — eszközelemzés és tényleges helyreállítás.
-- **DriverEvaluator** — csak listázást végző kiértékelés és snapshot létrehozása.
+- **DriverEvaluator** — HPIA életciklus-ellenőrzés, csak listázást végző kiértékelés és snapshot létrehozása.
 - **DriverDeployer** — snapshot-kiválasztás, ring- és exclusion-ellenőrzés, az elhalasztott telepítés folytatása és átadás.
 - **DriverDeployment PSADT** — a Normal/ForceRun mód interaktív és elhalasztható telepítési rétege.
 - **Framework PSADT** — a HP-DCF telepítése, javítása és eltávolítása, valamint a Scheduled Task kezelése.
@@ -34,6 +34,7 @@ Szekvenciális műveletek:
 Logon + 3 perc
    -> DriverEvaluator
       -> jogosultság
+      -> HPIA release ellenőrzés / szükség esetén frissítés
       -> HPIA Analyze/List
       -> kizárás
       -> rögzített SPList + manifest + .success
@@ -53,6 +54,7 @@ Logon + 3 perc
 DriverDeployer -ForceAll
    -> nincs snapshot/SPList
    -> nincs PSADT
+   -> HPIA release ellenőrzés / szükség esetén frissítés
    -> közvetlen HPIA full AutoInstallable helyreállítás
    -> siker után a korábbi snapshot-/átadási/elhalasztási állapot tisztítása
 ```
@@ -72,10 +74,11 @@ C:\HPIA\
 ## Alapelvek
 
 - A Normal működés explicit engedélyezést igényel, alapértelmezetten tiltott (fail-closed).
-- Evaluator nem tölt le és nem telepít SoftPaqot.
+- Az Evaluator nem tölt le és nem telepít ajánlási SoftPaqot; a HPIA életciklus-kezelése szükség esetén letöltheti és kibonthatja a HPIA SoftPaqot.
+- Az Evaluator a tényleges kiértékelés előtt ellenőrzi/frissíti a HPIA-t; Normal/ForceRun deployment előtt nincs új HPIA-frissítés.
 - A rögzített SPList a telepítés változatlan bemenete.
 - Az egyező `.deployed` marker biztosítja, hogy a snapshotot a későbbi Normal futások ne telepítsék újra.
 - A kizárás a kiértékeléskor és közvetlenül a telepítés előtt is érvényesül.
 - A Pilot azonnali, a Broad késleltetett.
 - Másik aktív PSADT mellett nincs új átadás.
-- A ForceAll explicit, közvetlen helyreállítási útvonal.
+- A ForceAll explicit, közvetlen helyreállítási útvonal, amely a remediation előtt külön HPIA aktualitás-ellenőrzést végez.

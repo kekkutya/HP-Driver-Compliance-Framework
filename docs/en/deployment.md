@@ -1,5 +1,11 @@
 # Deployment
 
+## Prerequisites
+
+Windows Package Manager (`winget`) must be installed and operational on the target device. HP-DCF uses Winget during framework installation and repair to install or update HP CMSL. If the required Winget package operations are unavailable, framework installation cannot complete successfully.
+
+The target device must also be able to reach the HP services required by HP CMSL and HPIA.
+
 ## Framework installation
 
 The framework PSADT package:
@@ -12,6 +18,8 @@ The framework PSADT package:
 6. creates the application detection key.
 
 Installation alone does **not** enable normal evaluation or deployment. Built-in `Enabled` defaults are False.
+
+For a minimal Pilot setup, see [Quick Start](quick-start.md).
 
 ## Scheduled Task
 
@@ -76,12 +84,12 @@ HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
 
 ## Release versioning
 
-`version.json` independently tracks framework and component versions. For v1.0.3:
+`version.json` independently tracks framework and component versions. For v1.0.4:
 
 ```text
-Framework       1.0.3
-DriverEvaluator 1.0.0
-DriverDeployer  1.0.1
+Framework       1.0.4
+DriverEvaluator 1.0.1
+DriverDeployer  1.0.2
 Administrative Template  1.0.1
 ```
 

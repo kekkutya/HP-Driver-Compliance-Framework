@@ -162,6 +162,201 @@ $SnapshotRetentionCount = $DefaultSnapshotRetentionCount
 
 $AcceptedHPIAExitCodes = @(0, 256, 257)
 
+
+# ============================================================
+# HPIA Lifecycle
+# ============================================================
+
+function Get-HPIABaseVersion
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory)]
+        [string]$VersionString
+    )
+
+    if ($VersionString -match '^(\d+)\.(\d+)\.(\d+)')
+    {
+        return "$($Matches[1]).$($Matches[2]).$($Matches[3])"
+    }
+
+    throw "Unable to parse HP Image Assistant version: $VersionString"
+}
+
+function Invoke-HPIAInstallOrUpdate
+{
+    [CmdletBinding()]
+    param()
+
+    $DownloadPath = 'C:\HPIA'
+    $InstallPath = 'C:\HPIA\HP Image Assistant'
+    $EvaluatorHPIAExe = Join-Path -Path $InstallPath -ChildPath 'HPImageAssistant.exe'
+    $DownloadedSoftpaq = $null
+
+    Write-Log -Message 'Starting HP Image Assistant version check.'
+
+    foreach ($RequiredCommand in @(
+        'Get-HPImageAssistantUpdateInfo',
+        'Install-HPImageAssistant'
+    ))
+    {
+        if (-not (Get-Command -Name $RequiredCommand -ErrorAction SilentlyContinue))
+        {
+            throw "Required HP CMSL command is not available: $RequiredCommand"
+        }
+    }
+
+    $UpdateInfo = Get-HPImageAssistantUpdateInfo -ErrorAction Stop
+    $LatestVersion = $UpdateInfo.Version.ToString()
+
+    if ([string]::IsNullOrWhiteSpace($LatestVersion))
+    {
+        throw 'Get-HPImageAssistantUpdateInfo did not return a Version.'
+    }
+
+    $LatestBaseVersion = Get-HPIABaseVersion -VersionString $LatestVersion
+    Write-Log -Message "Latest HP Image Assistant version: [$LatestVersion]"
+
+    $InstallRequired = $true
+
+    if (Test-Path -Path $EvaluatorHPIAExe -PathType Leaf)
+    {
+        $HPIAFile = Get-Item -Path $EvaluatorHPIAExe -ErrorAction Stop
+        $InstalledVersion = $HPIAFile.VersionInfo.FileVersion
+
+        if ([string]::IsNullOrWhiteSpace($InstalledVersion))
+        {
+            throw 'Unable to read installed HP Image Assistant version.'
+        }
+
+        $InstalledBaseVersion = Get-HPIABaseVersion -VersionString $InstalledVersion
+        Write-Log -Message "Installed HP Image Assistant version: [$InstalledVersion]"
+
+        if ($InstalledBaseVersion -eq $LatestBaseVersion)
+        {
+            Write-Log -Message 'HP Image Assistant is already up to date.'
+            $InstallRequired = $false
+        }
+        else
+        {
+            Write-Log -Message "HP Image Assistant update required. Installed release: [$InstalledBaseVersion]; latest release: [$LatestBaseVersion]"
+        }
+    }
+    else
+    {
+        Write-Log -Message 'HP Image Assistant is not installed.' -Level 'WARNING'
+    }
+
+    if ($InstallRequired)
+    {
+        if (-not (Test-Path -Path $DownloadPath -PathType Container))
+        {
+            New-Item -Path $DownloadPath -ItemType Directory -Force -ErrorAction Stop | Out-Null
+            Write-Log -Message "Created HP Image Assistant download folder: [$DownloadPath]"
+        }
+
+        if (-not (Test-Path -Path $InstallPath -PathType Container))
+        {
+            New-Item -Path $InstallPath -ItemType Directory -Force -ErrorAction Stop | Out-Null
+            Write-Log -Message "Created HP Image Assistant installation folder: [$InstallPath]"
+        }
+
+        $StaleSoftpaqs = Get-ChildItem -Path $DownloadPath -Filter 'hp-hpia-*.exe' -File -ErrorAction SilentlyContinue
+        foreach ($StaleSoftpaq in $StaleSoftpaqs)
+        {
+            Write-Log -Message "Removing stale HP Image Assistant SoftPaq: [$($StaleSoftpaq.FullName)]"
+            Remove-Item -Path $StaleSoftpaq.FullName -Force -ErrorAction Stop
+        }
+
+        Write-Log -Message "Downloading HP Image Assistant [$LatestVersion] to: [$DownloadPath]"
+
+        $DownloadParams = @{
+            DestinationPath = $DownloadPath
+            ErrorAction = 'Stop'
+        }
+
+        $DownloadOutput = Install-HPImageAssistant @DownloadParams 2>&1
+        foreach ($OutputLine in $DownloadOutput)
+        {
+            if ($null -ne $OutputLine -and -not [string]::IsNullOrWhiteSpace($OutputLine.ToString()))
+            {
+                Write-Log -Message "Install-HPImageAssistant: $($OutputLine.ToString())"
+            }
+        }
+
+        $ExpectedSoftpaq = Join-Path -Path $DownloadPath -ChildPath "hp-hpia-$LatestVersion.exe"
+        if (Test-Path -Path $ExpectedSoftpaq -PathType Leaf)
+        {
+            $DownloadedSoftpaq = Get-Item -Path $ExpectedSoftpaq -ErrorAction Stop
+        }
+        else
+        {
+            $DownloadedSoftpaq = Get-ChildItem -Path $DownloadPath -Filter 'hp-hpia-*.exe' -File -ErrorAction SilentlyContinue |
+                Sort-Object -Property LastWriteTime -Descending |
+                Select-Object -First 1
+        }
+
+        if ($null -eq $DownloadedSoftpaq)
+        {
+            throw "Downloaded HP Image Assistant SoftPaq was not found in: $DownloadPath"
+        }
+
+        Write-Log -Message "Downloaded HP Image Assistant SoftPaq: [$($DownloadedSoftpaq.FullName)]"
+
+        $OldFiles = Get-ChildItem -Path $InstallPath -Force -ErrorAction SilentlyContinue
+        if ($OldFiles)
+        {
+            Write-Log -Message "Removing old extracted HP Image Assistant files from: [$InstallPath]"
+            $OldFiles | Remove-Item -Recurse -Force -ErrorAction Stop
+        }
+
+        Write-Log -Message "Extracting HP Image Assistant to: [$InstallPath]"
+
+        $ExtractArgumentString = '/s /e /f "{0}"' -f $InstallPath
+        $ExtractProcess = Start-Process `
+            -FilePath $DownloadedSoftpaq.FullName `
+            -ArgumentList $ExtractArgumentString `
+            -Wait `
+            -PassThru `
+            -WindowStyle Hidden `
+            -ErrorAction Stop
+
+        Write-Log -Message "HP Image Assistant extractor exit code: [$($ExtractProcess.ExitCode)]"
+
+        if (-not (Test-Path -Path $EvaluatorHPIAExe -PathType Leaf))
+        {
+            throw "HPImageAssistant.exe was not found after extraction: $EvaluatorHPIAExe"
+        }
+
+        $HPIAFile = Get-Item -Path $EvaluatorHPIAExe -ErrorAction Stop
+        $InstalledVersion = $HPIAFile.VersionInfo.FileVersion
+
+        if ([string]::IsNullOrWhiteSpace($InstalledVersion))
+        {
+            throw 'Unable to read installed HP Image Assistant version after extraction.'
+        }
+
+        $InstalledBaseVersion = Get-HPIABaseVersion -VersionString $InstalledVersion
+        Write-Log -Message "Installed HP Image Assistant version after extraction: [$InstalledVersion]"
+
+        if ($InstalledBaseVersion -ne $LatestBaseVersion)
+        {
+            throw "Installed version [$InstalledVersion] does not match expected release [$LatestVersion]."
+        }
+
+        if (Test-Path -Path $DownloadedSoftpaq.FullName -PathType Leaf)
+        {
+            Write-Log -Message "Removing downloaded HP Image Assistant SoftPaq: [$($DownloadedSoftpaq.FullName)]"
+            Remove-Item -Path $DownloadedSoftpaq.FullName -Force -ErrorAction Stop
+        }
+
+        Write-Log -Message 'HP Image Assistant successfully installed/updated.'
+    }
+
+    Write-Log -Message "HP Image Assistant executable path: [$EvaluatorHPIAExe]"
+}
+
 $FrameworkRegistryPath =
     "HKLM:\SOFTWARE\HPDriverComplianceFramework"
 
@@ -1594,6 +1789,13 @@ Write-Log `
             -Message "Previous failure exists for this mode and period. Retrying." `
             -Level "WARNING"
     }
+
+
+    # ========================================================
+    # Ensure HPIA Is Current
+    # ========================================================
+
+    Invoke-HPIAInstallOrUpdate
 
 
     # ========================================================
