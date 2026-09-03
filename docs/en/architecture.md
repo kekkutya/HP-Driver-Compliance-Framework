@@ -8,7 +8,7 @@ HP Driver Compliance Framework (HP-DCF) separates **evaluation**, **deployment e
 
 - **HP CMSL** — installed/maintained by the framework package and used for HP management/HPIA lifecycle operations.
 - **HPIA** — analyzes the device and performs actual remediation.
-- **DriverEvaluator** — list-only evaluation and snapshot producer.
+- **DriverEvaluator** — HPIA lifecycle check, list-only evaluation and snapshot producer.
 - **DriverDeployer** — snapshot selection, ring/exclusion gates, defer resume and handoff orchestration.
 - **DriverDeployment PSADT** — interactive/deferred Normal/ForceRun installation layer.
 - **Framework PSADT** — installs/repairs/uninstalls the HP-DCF runtime and Scheduled Task.
@@ -45,7 +45,10 @@ User logon + 3 min
 DriverEvaluator
   eligibility / occurrence gate
         |
-        +-- eligible --> HPIA Analyze/List
+        +-- eligible --> HPIA release check/update
+                         |
+                         v
+                       HPIA Analyze/List
                          |
                          +-- exclusions
                          +-- frozen SPList
@@ -75,6 +78,8 @@ HPIA install using frozen SPList
         +-- success/restart --> snapshot-specific .deployed marker
 ```
 
+Normal/ForceRun deployment does not perform another HPIA update. The frozen evaluation result remains the deployment input.
+
 ## ForceAll path
 
 ```text
@@ -83,6 +88,9 @@ DriverDeployer -ForceAll
         +-- no snapshot
         +-- no SPList
         +-- no PSADT
+        v
+HPIA release check/update
+        |
         v
 HPIA direct full AutoInstallable remediation
         |
@@ -110,10 +118,11 @@ Evaluation state belongs to DriverEvaluator under `IAReport\Snapshots`. The snap
 ## Design invariants
 
 - Normal execution is explicit opt-in / fail-closed.
-- DriverEvaluator never installs or downloads SoftPaq binaries.
+- DriverEvaluator never downloads or installs recommendation SoftPaq binaries; HPIA lifecycle maintenance may download and extract the HPIA SoftPaq.
+- DriverEvaluator verifies/updates HPIA immediately before actual evaluation; Normal/ForceRun deployment does not update HPIA again.
 - A committed SPList is a frozen deployment input.
 - A matching `.deployed` marker makes the snapshot idempotent for later Normal executions.
 - Exclusions are enforced at evaluation and immediately before Normal/ForceRun deployment.
 - Pilot is immediate; Broad is delayed from the snapshot timestamp.
 - New deployment handoff is not created while another PSADT deployment is active.
-- ForceAll is an explicit emergency/direct-remediation path and intentionally bypasses snapshot, ring, exclusion and PSADT interaction.
+- ForceAll is an explicit emergency/direct-remediation path that verifies/updates HPIA before remediation and intentionally bypasses snapshot, ring, exclusion and PSADT interaction.

@@ -8,7 +8,7 @@ A `DriverDeployer.ps1` a HP-DCF rollout jogosultságát kezelő, elhalasztott te
 C:\HPIA\Automation\DriverDeployer.ps1
 ```
 
-Normal/`-ForceRun` esetén a dedikált DriverDeployment PSADT-t indítja. `-ForceAll` esetén PSADT nélkül közvetlenül HPIA-t futtat.
+Normal/`-ForceRun` esetén a dedikált DriverDeployment PSADT-t indítja. Ezeken az útvonalakon nincs deployment előtti HPIA-frissítés; a rögzített evaluation eredmény kerül telepítésre. `-ForceAll` esetén PSADT nélkül, előzetes HPIA aktualitás-ellenőrzés után közvetlenül HPIA-t futtat.
 
 ## Normal végrehajtás
 
@@ -40,7 +40,7 @@ A Pilot azonnal telepítésre jogosult, és a `BroadDelayDays` értékét figyel
 
 ## `-ForceAll`
 
-Snapshot és SPList nélkül, a kizárás, a ring és az engedélyezés megkerülésével, PSADT nélkül közvetlen HPIA full AutoInstallable helyreállítást futtat. A `0`, `256`, `1641`, `3010` sikeres kimenet; a `3020`, `4098`, `4099` és az ismeretlen kód hibát jelent. Siker után törli a korábbi HP-DCF snapshot- és átadási állapotot, valamint a kapcsolódó DriverDeployment elhalasztási állapotát.
+Snapshot és SPList nélkül, a kizárás, a ring és az engedélyezés megkerülésével, PSADT nélkül közvetlen HPIA full AutoInstallable helyreállítást futtat. A közvetlen remediation előtt ellenőrzi az aktuális HPIA release-t, szükség esetén telepíti/frissíti a HPIA-t, és a ténylegesen használt teljes HPIA fájlverziót a DriverDeployer logban rögzíti. Ha az aktualitás-ellenőrzés vagy a szükséges frissítés sikertelen, a ForceAll remediation nem indul el. A `0`, `256`, `1641`, `3010` sikeres kimenet; a `3020`, `4098`, `4099` és az ismeretlen kód hibát jelent. Siker után törli a korábbi HP-DCF snapshot- és átadási állapotot, valamint a kapcsolódó DriverDeployment elhalasztási állapotát.
 
 ## Elhalasztott telepítés folytatása
 
