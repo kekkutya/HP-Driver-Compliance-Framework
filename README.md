@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="res/HP_Driver_Compliance_Framework.png" alt="HP Driver Compliance Framework" width="50%">
+  <img src="res/HP_Driver_Compliance_Framework_Banner.png" alt="HP Driver Compliance Framework" width="100%">
 </p>
 
 <p align="center">

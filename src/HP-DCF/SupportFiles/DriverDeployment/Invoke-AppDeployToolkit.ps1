@@ -352,7 +352,7 @@ function Install-ADTDeployment
     elseif (!$adtSession.UseDefaultMsi)
     {
         Show-ADTInstallationPrompt `
-            -Message 'A HP eszközmeghajtók frissítése sikeresen befejeződött.' `
+            -Message (Get-ADTStringTable).BalloonTip.Complete.Install `
             -ButtonRightText 'OK'
     }
 }
