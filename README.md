@@ -94,6 +94,7 @@ For a minimal Pilot installation and first-run walkthrough, see the [Quick Start
 - [Deployment](docs/en/deployment.md)
 - [Troubleshooting](docs/en/troubleshooting.md)
 - [Magyar dokumentáció](docs/hu/README.md)
+- [Changelog](CHANGELOG.md)
 
 ## License
 
