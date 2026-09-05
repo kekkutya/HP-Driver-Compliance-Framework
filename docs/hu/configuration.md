@@ -1,6 +1,6 @@
 # Konfigurációs referencia
 
-Ez a dokumentum a HP-DCF v1.0.4 effektív konfigurációs modelljét írja le.
+Ez a dokumentum a HP-DCF v1.0.5 effektív konfigurációs modelljét írja le.
 
 ## Precedencia és alapértelmezetten tiltott működés
 

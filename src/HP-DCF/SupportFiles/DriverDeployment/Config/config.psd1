@@ -59,7 +59,7 @@
         LogMaxSize = 10
 
         # Log path used for Toolkit logging.
-        LogPath = '$envWinDir\Logs\Software'
+        LogPath = 'C:\HPIA\IAReport'
 
         # Same as LogPath but used when RequireAdmin is False.
         LogPathNoAdminRights = '$envProgramData\Logs\Software'

@@ -1836,10 +1836,6 @@ Write-Log `
     }
 
 
-    Write-Log `
-        -Message "HP Image Assistant version: [$HPIAVersion]"
-
-
     # ========================================================
     # Capture HPIA JSON State
     # ========================================================
