@@ -1,8 +1,8 @@
 {
-  "FrameworkVersion": "1.0.4",
+  "FrameworkVersion": "1.0.5",
   "Components": {
-    "DriverEvaluator": "1.0.1",
-    "DriverDeployer": "1.0.2"
+    "DriverEvaluator": "1.0.2",
+    "DriverDeployer": "1.0.3"
   },
   "Artifacts": {
     "AdministrativeTemplate": "1.0.1"

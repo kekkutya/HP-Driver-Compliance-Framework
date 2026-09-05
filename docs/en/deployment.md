@@ -84,12 +84,12 @@ HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
 
 ## Release versioning
 
-`version.json` independently tracks framework and component versions. For v1.0.4:
+`version.json` independently tracks framework and component versions. For v1.0.5:
 
 ```text
-Framework       1.0.4
-DriverEvaluator 1.0.1
-DriverDeployer  1.0.2
+Framework       1.0.5
+DriverEvaluator 1.0.2
+DriverDeployer  1.0.3
 Administrative Template  1.0.1
 ```
 

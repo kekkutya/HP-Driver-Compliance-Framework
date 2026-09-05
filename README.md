@@ -14,7 +14,7 @@
 
 The **HP Driver Compliance Framework (HP-DCF)** is a Windows endpoint automation framework for controlled evaluation and deployment of HP driver, software, firmware, and accessory updates.
 
-Current baseline: **Framework 1.0.4**, **DriverEvaluator 1.0.1**, **DriverDeployer 1.0.2**.
+Current baseline: **Framework 1.0.5**, **DriverEvaluator 1.0.2**, **DriverDeployer 1.0.3**.
 
 ## Design
 
@@ -93,3 +93,11 @@ For a minimal Pilot installation and first-run walkthrough, see the [Quick Start
 - [Deployment](docs/en/deployment.md)
 - [Troubleshooting](docs/en/troubleshooting.md)
 - [Magyar dokumentáció](docs/hu/README.md)
+
+## License
+
+Except where otherwise noted, original HP-DCF source code and documentation are licensed under the [MIT License](LICENSE).
+
+HP-DCF includes and redistributes third-party components, including PSAppDeployToolkit and PSAppDeployToolkit.WinGet, under their respective licenses. HP Client Management Script Library (HP CMSL) and HP Image Assistant (HPIA) are obtained separately from HP-supported sources and are not redistributed by HP-DCF.
+
+See [Third-Party Notices](NOTICE.md) for component, license, attribution, and dependency details.
