@@ -1,6 +1,6 @@
 # Configuration Reference
 
-This document describes the effective configuration model of HP-DCF v1.0.4.
+This document describes the effective configuration model of HP-DCF v1.0.5.
 
 ## Precedence and fail-closed defaults
 

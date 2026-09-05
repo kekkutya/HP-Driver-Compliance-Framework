@@ -7,6 +7,7 @@
   <a href="https://www.microsoft.com/windows/"><img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows&logoColor=white" alt="Windows 10/11"></a>
   <a href="https://ftp.ext.hp.com/pub/caps-softpaq/cmit/HPIA.html"><img src="https://img.shields.io/badge/HPIA-HP%20Image%20Assistant-0096D6" alt="HP Image Assistant"></a>
   <a href="https://psappdeploytoolkit.com/"><img src="https://img.shields.io/badge/PSADT-4.1.8-2D2D2D" alt="PSAppDeployToolkit 4.1.8"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
   <a href="https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/latest"><img src="https://img.shields.io/github/v/release/kekkutya/HP-Driver-Compliance-Framework?label=Release" alt="Latest release"></a>
 </p>
 
@@ -14,7 +15,7 @@
 
 The **HP Driver Compliance Framework (HP-DCF)** is a Windows endpoint automation framework for controlled evaluation and deployment of HP driver, software, firmware, and accessory updates.
 
-Current baseline: **Framework 1.0.4**, **DriverEvaluator 1.0.1**, **DriverDeployer 1.0.2**.
+Current baseline: **Framework 1.0.5**, **DriverEvaluator 1.0.2**, **DriverDeployer 1.0.3**.
 
 ## Design
 
@@ -93,3 +94,11 @@ For a minimal Pilot installation and first-run walkthrough, see the [Quick Start
 - [Deployment](docs/en/deployment.md)
 - [Troubleshooting](docs/en/troubleshooting.md)
 - [Magyar dokumentáció](docs/hu/README.md)
+
+## License
+
+Except where otherwise noted, original HP-DCF source code and documentation are licensed under the [MIT License](LICENSE).
+
+HP-DCF includes and redistributes third-party components, including PSAppDeployToolkit and PSAppDeployToolkit.WinGet, under their respective licenses. HP Client Management Script Library (HP CMSL) and HP Image Assistant (HPIA) are obtained separately from HP-supported sources and are not redistributed by HP-DCF.
+
+See [Third-Party Notices](NOTICE.md) for component, license, attribution, and dependency details.
