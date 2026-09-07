@@ -114,7 +114,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Earlier `0.x` tags represent pre-1.0 development milestones and are not individually documented here.
 
-[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.7
 [1.0.5]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.5
 [1.0.4]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.4
 [1.0.3]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.3
