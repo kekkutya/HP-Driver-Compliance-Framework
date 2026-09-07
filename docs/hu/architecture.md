@@ -76,6 +76,7 @@ C:\HPIA\
 - A Normal működés explicit engedélyezést igényel, alapértelmezetten tiltott (fail-closed).
 - Az Evaluator nem tölt le és nem telepít ajánlási SoftPaqot; a HPIA életciklus-kezelése szükség esetén letöltheti és kibonthatja a HPIA SoftPaqot.
 - Az Evaluator a tényleges kiértékelés előtt ellenőrzi/frissíti a HPIA-t; Normal/ForceRun deployment előtt nincs új HPIA-frissítés.
+- Az Evaluator védekező módon validálja a HPIA AutoInstallable eredményét, és csak explicit `SSMCompliant=True` recommendation kerülhet a snapshotba. A nem SSM-compliant vagy nem egyértelmű recommendation kimarad a snapshotból, és diagnosztikai metadataként megmarad.
 - A rögzített SPList a telepítés változatlan bemenete.
 - Az egyező `.deployed` marker biztosítja, hogy a snapshotot a későbbi Normal futások ne telepítsék újra.
 - A kizárás a kiértékeléskor és közvetlenül a telepítés előtt is érvényesül.

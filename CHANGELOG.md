@@ -6,8 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Added operational guidance for Pilot/Broad ring composition, monitoring requirements, and `BroadDelayDays` risk tuning.
+
 ### Changed
 
+- DriverEvaluator now defensively validates AutoInstallable results: only recommendations with explicit `SSMCompliant=True` are committed to snapshots; rejected recommendations are retained as diagnostic metadata.
+- Made completed HPIA deployment failures retryable by clearing transient deployment handoff state without creating a `.deployed` marker, while preserving the original HPIA failure exit code.
+- Made HPIA lifecycle updates transactional: new HPIA payloads are extracted and validated in staging before replacing the active instance, with interrupted-update recovery and rollback if promotion fails.
+- Updated the framework baseline to 1.0.7, DriverEvaluator to 1.0.4, and DriverDeployer to 1.0.5.
+- Preserved HP CMSL during framework uninstallation because it is a shared prerequisite that may be used by other management workflows.
+- Documented `C:\HPIA` as the exclusive HP-DCF 1.0.x working root and clarified that the complete runtime, including the HP-DCF-managed portable HPIA instance, is removed during framework uninstallation.
 - Updated repository artwork with a wide README banner and GitHub Social Preview image.
 - Added an MIT license badge to the README.
 - Replaced the hard-coded Hungarian DriverDeployment completion message with the native localized PSAppDeployToolkit completion message.

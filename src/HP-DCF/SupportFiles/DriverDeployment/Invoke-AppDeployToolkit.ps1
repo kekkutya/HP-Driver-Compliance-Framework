@@ -206,6 +206,33 @@ function Set-HPDCFDeploymentCompletedState
 }
 
 
+function Remove-HPDCFDeploymentHandoffState
+{
+    [CmdletBinding()]
+    param
+    (
+        [string[]]$StateFiles = @(
+            'C:\HPIA\IAReport\Deployment\Deployment.active',
+            'C:\HPIA\IAReport\Deployment\Deployment.request.json',
+            'C:\HPIA\IAReport\Deployment\Deployment.splist.txt'
+        ),
+
+        [string]$Reason = 'completed'
+    )
+
+    foreach ($StateFile in $StateFiles)
+    {
+        if (Test-Path -LiteralPath $StateFile -PathType Leaf)
+        {
+            Write-ADTLogEntry -Message "Removing HP-DCF deployment handoff state after $Reason deployment: [$StateFile]"
+            Remove-Item -LiteralPath $StateFile -Force -ErrorAction Stop
+        }
+    }
+
+    Write-ADTLogEntry -Message "HP-DCF deployment handoff cleanup completed after $Reason deployment."
+}
+
+
 function Install-ADTDeployment
 {
     [CmdletBinding()]
@@ -291,14 +318,73 @@ function Install-ADTDeployment
 
     switch ($HPIAExitCode)
     {
-        0 { Write-ADTLogEntry -Message 'HP Image Assistant deployment completed successfully.' }
-        256 { Write-ADTLogEntry -Message 'HP Image Assistant completed with no applicable recommendations.' }
-        1641 { Write-ADTLogEntry -Message 'HP Image Assistant completed successfully and initiated a restart.' }
-        3010 { Write-ADTLogEntry -Message 'HP Image Assistant completed successfully and requires a restart.' }
-        3020 { throw 'HP Image Assistant deployment failed: one or more SoftPaq installations failed. Exit code [3020].' }
-        4098 { throw 'HP Image Assistant deployment failed: no internet connection. Exit code [4098].' }
-        4099 { throw 'HP Image Assistant deployment failed: invalid SoftPaq number in SPList. Exit code [4099].' }
-        default { throw "HP Image Assistant deployment failed with exit code [$HPIAExitCode]." }
+        0
+        {
+            Write-ADTLogEntry -Message 'HP Image Assistant deployment completed successfully.'
+        }
+
+        256
+        {
+            Write-ADTLogEntry -Message 'HP Image Assistant completed with no applicable recommendations.'
+        }
+
+        1641
+        {
+            Write-ADTLogEntry -Message 'HP Image Assistant completed successfully and initiated a restart.'
+        }
+
+        3010
+        {
+            Write-ADTLogEntry -Message 'HP Image Assistant completed successfully and requires a restart.'
+        }
+
+        3020
+        {
+            Write-ADTLogEntry `
+                -Message 'HP Image Assistant deployment failed: one or more SoftPaq installations failed. Exit code [3020].' `
+                -Severity 3
+
+            Remove-HPDCFDeploymentHandoffState -Reason 'failed'
+
+            $script:FinalExitCode = $HPIAExitCode
+            return
+        }
+
+        4098
+        {
+            Write-ADTLogEntry `
+                -Message 'HP Image Assistant deployment failed: no internet connection. Exit code [4098].' `
+                -Severity 3
+
+            Remove-HPDCFDeploymentHandoffState -Reason 'failed'
+
+            $script:FinalExitCode = $HPIAExitCode
+            return
+        }
+
+        4099
+        {
+            Write-ADTLogEntry `
+                -Message 'HP Image Assistant deployment failed: invalid SoftPaq number in SPList. Exit code [4099].' `
+                -Severity 3
+
+            Remove-HPDCFDeploymentHandoffState -Reason 'failed'
+
+            $script:FinalExitCode = $HPIAExitCode
+            return
+        }
+
+        default
+        {
+            Write-ADTLogEntry `
+                -Message "HP Image Assistant deployment failed with exit code [$HPIAExitCode]." `
+                -Severity 3
+
+            Remove-HPDCFDeploymentHandoffState -Reason 'failed'
+
+            $script:FinalExitCode = $HPIAExitCode
+            return
+        }
     }
 
 
@@ -316,20 +402,7 @@ function Install-ADTDeployment
     Set-HPDCFDeploymentCompletedState -HPIAExitCode $HPIAExitCode
 
     ## Remove the completed HP-DCF deployment handoff state.
-    $HPDCFDeploymentStateFiles = @(
-        'C:\HPIA\IAReport\Deployment\Deployment.active',
-        'C:\HPIA\IAReport\Deployment\Deployment.request.json',
-        'C:\HPIA\IAReport\Deployment\Deployment.splist.txt'
-    )
-
-    foreach ($StateFile in $HPDCFDeploymentStateFiles)
-    {
-        if (Test-Path -LiteralPath $StateFile -PathType Leaf)
-        {
-            Write-ADTLogEntry -Message "Removing completed HP-DCF deployment state: [$StateFile]"
-            Remove-Item -LiteralPath $StateFile -Force -ErrorAction Stop
-        }
-    }
+    Remove-HPDCFDeploymentHandoffState -Reason 'successful'
 
     Write-ADTLogEntry -Message 'HP-DCF deployment handoff completed successfully.'
 
