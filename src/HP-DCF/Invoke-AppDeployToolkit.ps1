@@ -138,8 +138,13 @@ function Invoke-HPIAInstallOrUpdate
 
     $DownloadPath = 'C:\HPIA'
     $InstallPath = 'C:\HPIA\HP Image Assistant'
+    $StagingPath = 'C:\HPIA\HP Image Assistant.staging'
+    $BackupPath = 'C:\HPIA\HP Image Assistant.backup'
+
     $HPIAExe = Join-Path -Path $InstallPath -ChildPath 'HPImageAssistant.exe'
+    $StagingHPIAExe = Join-Path -Path $StagingPath -ChildPath 'HPImageAssistant.exe'
     $DownloadedSoftpaq = $null
+    $PreviousInstallationBackedUp = $false
 
     try
     {
@@ -156,11 +161,50 @@ function Invoke-HPIAInstallOrUpdate
         $LatestBaseVersion = Get-HPIABaseVersion -VersionString $LatestVersion
         Write-ADTLogEntry -Message "Latest HP Image Assistant version: $LatestVersion"
 
+        if (Test-Path -LiteralPath $StagingPath)
+        {
+            Write-ADTLogEntry -Message "Removing stale HP Image Assistant staging path: $StagingPath"
+            Remove-Item -LiteralPath $StagingPath -Recurse -Force -ErrorAction Stop
+        }
+
+        if (Test-Path -LiteralPath $BackupPath -PathType Container)
+        {
+            if (Test-Path -LiteralPath $HPIAExe -PathType Leaf)
+            {
+                Write-ADTLogEntry -Message "Removing stale HP Image Assistant backup because a valid active executable exists: $BackupPath"
+                Remove-Item -LiteralPath $BackupPath -Recurse -Force -ErrorAction Stop
+            }
+            elseif (-not (Test-Path -LiteralPath $InstallPath))
+            {
+                Write-ADTLogEntry -Message "Recovering HP Image Assistant from interrupted transaction backup: $BackupPath"
+                Move-Item -LiteralPath $BackupPath -Destination $InstallPath -ErrorAction Stop
+
+                if (-not (Test-Path -LiteralPath $HPIAExe -PathType Leaf))
+                {
+                    throw "HP Image Assistant recovery completed, but HPImageAssistant.exe was not found: $HPIAExe"
+                }
+
+                $RecoveredVersion =
+                    (Get-Item -LiteralPath $HPIAExe -ErrorAction Stop).VersionInfo.FileVersion
+
+                if ([string]::IsNullOrWhiteSpace($RecoveredVersion))
+                {
+                    throw 'Unable to read recovered HP Image Assistant version.'
+                }
+
+                Write-ADTLogEntry -Message "HP Image Assistant recovery succeeded. Restored version: $RecoveredVersion"
+            }
+            else
+            {
+                throw "HP Image Assistant transaction state is ambiguous. Active path exists without HPImageAssistant.exe while backup path also exists. Active: [$InstallPath]; backup: [$BackupPath]"
+            }
+        }
+
         $InstallRequired = $true
 
-        if (Test-Path -Path $HPIAExe -PathType Leaf)
+        if (Test-Path -LiteralPath $HPIAExe -PathType Leaf)
         {
-            $HPIAFile = Get-Item -Path $HPIAExe -ErrorAction Stop
+            $HPIAFile = Get-Item -LiteralPath $HPIAExe -ErrorAction Stop
             $InstalledVersion = $HPIAFile.VersionInfo.FileVersion
 
             if ([string]::IsNullOrWhiteSpace($InstalledVersion))
@@ -169,7 +213,7 @@ function Invoke-HPIAInstallOrUpdate
             }
 
             $InstalledBaseVersion = Get-HPIABaseVersion -VersionString $InstalledVersion
-            Write-ADTLogEntry -Message "Installed HP Image Assistnt version: $InstalledVersion"
+            Write-ADTLogEntry -Message "Installed HP Image Assistant version: $InstalledVersion"
 
             if ($InstalledBaseVersion -eq $LatestBaseVersion)
             {
@@ -192,23 +236,18 @@ function Invoke-HPIAInstallOrUpdate
             return
         }
 
-        if (-not (Test-Path -Path $DownloadPath -PathType Container))
+        if (-not (Test-Path -LiteralPath $DownloadPath -PathType Container))
         {
             New-Item -Path $DownloadPath -ItemType Directory -Force -ErrorAction Stop | Out-Null
             Write-ADTLogEntry -Message "Created HP Image Assistant download folder: $DownloadPath"
         }
 
-        if (-not (Test-Path -Path $InstallPath -PathType Container))
-        {
-            New-Item -Path $InstallPath -ItemType Directory -Force -ErrorAction Stop | Out-Null
-            Write-ADTLogEntry -Message "Created HP Image Assistant installation folder: $InstallPath"
-        }
+        $StaleSoftpaqs = Get-ChildItem -LiteralPath $DownloadPath -Filter 'hp-hpia-*.exe' -File -ErrorAction SilentlyContinue
 
-        $StaleSoftpaqs = Get-ChildItem -Path $DownloadPath -Filter 'hp-hpia-*.exe' -File -ErrorAction SilentlyContinue
         foreach ($StaleSoftpaq in $StaleSoftpaqs)
         {
             Write-ADTLogEntry -Message "Removing stale HP Image Assistant SoftPaq: $($StaleSoftpaq.FullName)"
-            Remove-Item -Path $StaleSoftpaq.FullName -Force -ErrorAction Stop
+            Remove-Item -LiteralPath $StaleSoftpaq.FullName -Force -ErrorAction Stop
         }
 
         Write-ADTLogEntry -Message "Downloading HP Image Assistant $LatestVersion to: $DownloadPath"
@@ -219,6 +258,7 @@ function Invoke-HPIAInstallOrUpdate
         }
 
         $DownloadOutput = Install-HPImageAssistant @DownloadParams 2>&1
+
         foreach ($OutputLine in $DownloadOutput)
         {
             if ($null -ne $OutputLine -and -not [string]::IsNullOrWhiteSpace($OutputLine.ToString()))
@@ -228,13 +268,17 @@ function Invoke-HPIAInstallOrUpdate
         }
 
         $ExpectedSoftpaq = Join-Path -Path $DownloadPath -ChildPath "hp-hpia-$LatestVersion.exe"
-        if (Test-Path -Path $ExpectedSoftpaq -PathType Leaf)
+
+        if (Test-Path -LiteralPath $ExpectedSoftpaq -PathType Leaf)
         {
-            $DownloadedSoftpaq = Get-Item -Path $ExpectedSoftpaq -ErrorAction Stop
+            $DownloadedSoftpaq = Get-Item -LiteralPath $ExpectedSoftpaq -ErrorAction Stop
         }
         else
         {
-            $DownloadedSoftpaq = Get-ChildItem -Path $DownloadPath -Filter 'hp-hpia-*.exe' -File -ErrorAction SilentlyContinue | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1
+            $DownloadedSoftpaq =
+                Get-ChildItem -LiteralPath $DownloadPath -Filter 'hp-hpia-*.exe' -File -ErrorAction SilentlyContinue |
+                Sort-Object -Property LastWriteTime -Descending |
+                Select-Object -First 1
         }
 
         if ($null -eq $DownloadedSoftpaq)
@@ -244,57 +288,153 @@ function Invoke-HPIAInstallOrUpdate
 
         Write-ADTLogEntry -Message "Downloaded HP Image Assistant SoftPaq: $($DownloadedSoftpaq.FullName)"
 
-        $OldFiles = Get-ChildItem -Path $InstallPath -Force -ErrorAction SilentlyContinue
-        if ($OldFiles)
-        {
-            Write-ADTLogEntry -Message "Removing old extracted HP Image Assistant files from: $InstallPath"
-            $OldFiles | Remove-Item -Recurse -Force -ErrorAction Stop
-        }
+        New-Item -Path $StagingPath -ItemType Directory -Force -ErrorAction Stop | Out-Null
+        Write-ADTLogEntry -Message "Created HP Image Assistant staging folder: $StagingPath"
 
-        Write-ADTLogEntry -Message "Extracting HP Image Assistant to: $InstallPath"
+        $ExtractArgumentString = '/s /e /f "{0}"' -f $StagingPath
 
-        $ExtractArgumentString = '/s /e /f "{0}"' -f $InstallPath
+        Write-ADTLogEntry -Message "Extracting HP Image Assistant to staging path: $StagingPath"
         Write-ADTLogEntry -Message "Running extractor: $($DownloadedSoftpaq.FullName) $ExtractArgumentString"
 
-        $ExtractProcess = Start-Process -FilePath $DownloadedSoftpaq.FullName -ArgumentList $ExtractArgumentString -Wait -PassThru -WindowStyle Hidden -ErrorAction Stop
+        $ExtractProcess =
+            Start-Process `
+                -FilePath $DownloadedSoftpaq.FullName `
+                -ArgumentList $ExtractArgumentString `
+                -Wait `
+                -PassThru `
+                -WindowStyle Hidden `
+                -ErrorAction Stop
+
         Write-ADTLogEntry -Message "HP Image Assistant extractor exit code: $($ExtractProcess.ExitCode)"
 
-        if (-not (Test-Path -Path $HPIAExe -PathType Leaf))
+        # The HPIA SoftPaq self-extracting wrapper may return a non-zero exit code
+        # even when the requested payload was extracted successfully. Do not use the
+        # wrapper exit code as the extraction success criterion. Validate the staged
+        # HPImageAssistant.exe and its release version instead.
+
+        if (-not (Test-Path -LiteralPath $StagingHPIAExe -PathType Leaf))
         {
-            throw "HPImageAssistant.exe was not found after extraction: $HPIAExe"
+            throw "HPImageAssistant.exe was not found after staging extraction: $StagingHPIAExe"
         }
 
-        $HPIAFile = Get-Item -Path $HPIAExe -ErrorAction Stop
+        $StagingHPIAFile = Get-Item -LiteralPath $StagingHPIAExe -ErrorAction Stop
+        $StagingVersion = $StagingHPIAFile.VersionInfo.FileVersion
+
+        if ([string]::IsNullOrWhiteSpace($StagingVersion))
+        {
+            throw 'Unable to read staged HP Image Assistant version.'
+        }
+
+        $StagingBaseVersion = Get-HPIABaseVersion -VersionString $StagingVersion
+        Write-ADTLogEntry -Message "Staged HP Image Assistant version: $StagingVersion"
+
+        if ($StagingBaseVersion -ne $LatestBaseVersion)
+        {
+            throw "Staged version [$StagingVersion] does not match expected release [$LatestVersion]."
+        }
+
+        Write-ADTLogEntry -Message 'Staged HP Image Assistant validation succeeded.'
+
+        if (Test-Path -LiteralPath $InstallPath -PathType Container)
+        {
+            Write-ADTLogEntry -Message "Moving current HP Image Assistant installation to backup path: $BackupPath"
+            Move-Item -LiteralPath $InstallPath -Destination $BackupPath -ErrorAction Stop
+            $PreviousInstallationBackedUp = $true
+        }
+
+        Write-ADTLogEntry -Message "Promoting staged HP Image Assistant installation to active path: $InstallPath"
+        Move-Item -LiteralPath $StagingPath -Destination $InstallPath -ErrorAction Stop
+
+        if (-not (Test-Path -LiteralPath $HPIAExe -PathType Leaf))
+        {
+            throw "HPImageAssistant.exe was not found after promotion: $HPIAExe"
+        }
+
+        $HPIAFile = Get-Item -LiteralPath $HPIAExe -ErrorAction Stop
         $InstalledVersion = $HPIAFile.VersionInfo.FileVersion
 
         if ([string]::IsNullOrWhiteSpace($InstalledVersion))
         {
-            throw 'Unable to read installed HP Image Assistant version after extraction.'
+            throw 'Unable to read installed HP Image Assistant version after promotion.'
         }
 
         $InstalledBaseVersion = Get-HPIABaseVersion -VersionString $InstalledVersion
-        Write-ADTLogEntry -Message "Installed HP Image Assistant version after extraction: $InstalledVersion"
+        Write-ADTLogEntry -Message "Installed HP Image Assistant version after promotion: $InstalledVersion"
 
         if ($InstalledBaseVersion -ne $LatestBaseVersion)
         {
-            throw "Installed version ($InstalledVersion) does not match expected release ($LatestVersion)."
+            throw "Installed version [$InstalledVersion] does not match expected release [$LatestVersion] after promotion."
         }
 
-        if (Test-Path -Path $DownloadedSoftpaq.FullName -PathType Leaf)
+        Write-ADTLogEntry -Message 'Promoted HP Image Assistant validation succeeded.'
+
+        if (Test-Path -LiteralPath $BackupPath)
+        {
+            Write-ADTLogEntry -Message "Removing HP Image Assistant backup after successful promotion: $BackupPath"
+            Remove-Item -LiteralPath $BackupPath -Recurse -Force -ErrorAction Stop
+            $PreviousInstallationBackedUp = $false
+        }
+
+        if (Test-Path -LiteralPath $DownloadedSoftpaq.FullName -PathType Leaf)
         {
             Write-ADTLogEntry -Message "Removing downloaded HP Image Assistant SoftPaq: $($DownloadedSoftpaq.FullName)"
-            Remove-Item -Path $DownloadedSoftpaq.FullName -Force -ErrorAction Stop
+            Remove-Item -LiteralPath $DownloadedSoftpaq.FullName -Force -ErrorAction Stop
             Write-ADTLogEntry -Message 'Downloaded HP Image Assistant SoftPaq removed successfully.'
         }
 
-        Write-ADTLogEntry -Message 'HP Image Assistant successfully installed/updated.'
+        Write-ADTLogEntry -Message 'HP Image Assistant successfully installed/updated transactionally.'
         Write-ADTLogEntry -Message "HP Image Assistant version: $InstalledVersion"
         Write-ADTLogEntry -Message "HP Image Assistant executable path: $HPIAExe"
     }
     catch
     {
-        Write-ADTLogEntry -Message "HP Image Assistant installation/update failed: $($_.Exception.Message)" -Severity 3
-        throw
+        $OriginalError = $_
+        Write-ADTLogEntry -Message "HP Image Assistant installation/update failed: $($OriginalError.Exception.Message)" -Severity 3
+
+        if ($PreviousInstallationBackedUp -and (Test-Path -LiteralPath $BackupPath -PathType Container))
+        {
+            try
+            {
+                Write-ADTLogEntry -Message 'Attempting HP Image Assistant rollback.'
+
+                if (Test-Path -LiteralPath $InstallPath)
+                {
+                    Write-ADTLogEntry -Message "Removing failed promoted HP Image Assistant installation: $InstallPath"
+                    Remove-Item -LiteralPath $InstallPath -Recurse -Force -ErrorAction Stop
+                }
+
+                Move-Item -LiteralPath $BackupPath -Destination $InstallPath -ErrorAction Stop
+
+                if (-not (Test-Path -LiteralPath $HPIAExe -PathType Leaf))
+                {
+                    throw "Rollback completed, but HPImageAssistant.exe was not found: $HPIAExe"
+                }
+
+                $RollbackVersion =
+                    (Get-Item -LiteralPath $HPIAExe -ErrorAction Stop).VersionInfo.FileVersion
+
+                Write-ADTLogEntry -Message "HP Image Assistant rollback succeeded. Restored version: $RollbackVersion"
+            }
+            catch
+            {
+                Write-ADTLogEntry -Message "HP Image Assistant rollback failed: $($_.Exception.Message)" -Severity 3
+            }
+        }
+
+        if (Test-Path -LiteralPath $StagingPath)
+        {
+            try
+            {
+                Remove-Item -LiteralPath $StagingPath -Recurse -Force -ErrorAction Stop
+                Write-ADTLogEntry -Message "Removed HP Image Assistant staging path after failure: $StagingPath"
+            }
+            catch
+            {
+                Write-ADTLogEntry -Message "Unable to remove HP Image Assistant staging path after failure: $($_.Exception.Message)" -Severity 2
+            }
+        }
+
+        throw $OriginalError
     }
 }
 
@@ -519,7 +659,9 @@ function Uninstall-ADTDeployment
     }
 
     ## <Perform Uninstallation tasks here>
-    Uninstall-ADTWinGetPackage -Id HP.HPCMSL
+    # HP CMSL is a shared prerequisite and may be used by other management workflows.
+    # HP-DCF therefore intentionally preserves it during framework uninstallation.
+    Write-ADTLogEntry -Message 'HP CMSL is a shared prerequisite and will be preserved during HP-DCF uninstallation.'
 
 
     ##================================================

@@ -120,6 +120,7 @@ Evaluation state belongs to DriverEvaluator under `IAReport\Snapshots`. The snap
 - Normal execution is explicit opt-in / fail-closed.
 - DriverEvaluator never downloads or installs recommendation SoftPaq binaries; HPIA lifecycle maintenance may download and extract the HPIA SoftPaq.
 - DriverEvaluator verifies/updates HPIA immediately before actual evaluation; Normal/ForceRun deployment does not update HPIA again.
+- DriverEvaluator defensively validates HPIA AutoInstallable results and commits only recommendations with explicit `SSMCompliant=True`. Non-SSM-compliant or indeterminate recommendations are excluded from the snapshot and retained as diagnostic metadata.
 - A committed SPList is a frozen deployment input.
 - A matching `.deployed` marker makes the snapshot idempotent for later Normal executions.
 - Exclusions are enforced at evaluation and immediately before Normal/ForceRun deployment.

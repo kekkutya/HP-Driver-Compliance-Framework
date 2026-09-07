@@ -15,7 +15,7 @@
 
 The **HP Driver Compliance Framework (HP-DCF)** is a Windows endpoint automation framework for controlled evaluation and deployment of HP driver, software, firmware, and accessory updates.
 
-Current baseline: **Framework 1.0.5**, **DriverEvaluator 1.0.2**, **DriverDeployer 1.0.3**.
+Current baseline: **Framework 1.0.7**, **DriverEvaluator 1.0.4**, **DriverDeployer 1.0.5**.
 
 ## Design
 
@@ -92,6 +92,7 @@ For a minimal Pilot installation and first-run walkthrough, see the [Quick Start
 - [DriverEvaluator](docs/en/DriverEvaluator.md)
 - [DriverDeployer](docs/en/DriverDeployer.md)
 - [Deployment](docs/en/deployment.md)
+- [Pilot and Broad Ring Strategy](docs/en/pilot-broad-ring-strategy.md)
 - [Troubleshooting](docs/en/troubleshooting.md)
 - [Magyar dokumentáció](docs/hu/README.md)
 - [Changelog](CHANGELOG.md)
