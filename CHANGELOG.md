@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.9] - 2026-09-16
+
+### Fixed
+
+- Fixed DriverDeployer ForceAll preflight validation to accept the HPIA `Analyze Action List` operation reported by successful Analyze/List executions instead of incorrectly expecting `Analyze`.
+
+### Changed
+
+- Updated the framework baseline to 1.0.9 and DriverDeployer to 1.0.7. DriverEvaluator remains at 1.0.5.
+
 ## [1.0.8] - 2026-09-16
 
 ### Changed
@@ -122,7 +132,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Earlier `0.x` tags represent pre-1.0 development milestones and are not individually documented here.
 
-[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.8...HEAD
+[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.9
 [1.0.8]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.8
 [1.0.7]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.7
 [1.0.5]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.5
