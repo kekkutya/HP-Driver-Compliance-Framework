@@ -52,10 +52,16 @@ Logon + 3 perc
 
 ```text
 DriverDeployer -ForceAll
-   -> nincs snapshot/SPList
+   -> nincs Evaluation snapshot vagy snapshot SPList
    -> nincs PSADT
+   -> ExcludeSoftPaqs bypass
    -> HPIA release ellenőrzés / szükség esetén frissítés
-   -> közvetlen HPIA full AutoInstallable helyreállítás
+   -> Analyze/List AutoInstallable preflight
+      -> generic OS reference (4104): fail-closed, nincs remediation
+      -> csak explicit SSMCompliant=True recommendation
+   -> transient, rögzített ForceAll SPList
+      -> nincs telepíthető recommendation: siker, nincs remediation
+   -> HPIA telepítés a validált ForceAll SPList alapján
    -> siker után a korábbi snapshot-/átadási/elhalasztási állapot tisztítása
 ```
 
@@ -77,9 +83,10 @@ C:\HPIA\
 - Az Evaluator nem tölt le és nem telepít ajánlási SoftPaqot; a HPIA életciklus-kezelése szükség esetén letöltheti és kibonthatja a HPIA SoftPaqot.
 - Az Evaluator a tényleges kiértékelés előtt ellenőrzi/frissíti a HPIA-t; Normal/ForceRun deployment előtt nincs új HPIA-frissítés.
 - Az Evaluator védekező módon validálja a HPIA AutoInstallable eredményét, és csak explicit `SSMCompliant=True` recommendation kerülhet a snapshotba. A nem SSM-compliant vagy nem egyértelmű recommendation kimarad a snapshotból, és diagnosztikai metadataként megmarad.
+- Az Evaluator a HPIA `4104` exit kódját fail-closed generic OS reference állapotként kezeli. Támogatott platform/OS reference nélkül létrejött recommendation nem kerül deployment snapshotba; a sikertelen occurrence újrapróbálható marad, így egy későbbi kiértékelés sikeres lehet, amikor a HP már támogatott reference-t publikál.
 - A rögzített SPList a telepítés változatlan bemenete.
 - Az egyező `.deployed` marker biztosítja, hogy a snapshotot a későbbi Normal futások ne telepítsék újra.
 - A kizárás a kiértékeléskor és közvetlenül a telepítés előtt is érvényesül.
 - A Pilot azonnali, a Broad késleltetett.
 - Másik aktív PSADT mellett nincs új átadás.
-- A ForceAll explicit, közvetlen helyreállítási útvonal, amely a remediation előtt külön HPIA aktualitás-ellenőrzést végez.
+- A ForceAll explicit, közvetlen helyreállítási útvonal, amely a remediation előtt HPIA aktualitás-ellenőrzést és fail-closed Analyze/List preflightot végez. Az Evaluation snapshotot, a ring jogosultságot, a kizárásokat és a PSADT-t bypassolja, de csak támogatott platform/OS reference-ből származó, explicit `SSMCompliant=True` recommendation telepíthető a transient, rögzített ForceAll SPListből.

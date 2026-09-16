@@ -1,6 +1,6 @@
 # HP Driver Compliance Framework dokumentáció
 
-Ez a könyvtár a **HP Driver Compliance Framework (HP-DCF) v1.0.7** magyar műszaki dokumentációját tartalmazza. A kanonikus műszaki dokumentáció az [angol változat](../en/README.md); a magyar fájlok annak karbantartott fordításai.
+Ez a könyvtár a **HP Driver Compliance Framework (HP-DCF) v1.0.8** magyar műszaki dokumentációját tartalmazza. A kanonikus műszaki dokumentáció az [angol változat](../en/README.md); a magyar fájlok annak karbantartott fordításai.
 
 ## Dokumentumok
 

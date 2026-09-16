@@ -85,14 +85,26 @@ Normal/ForceRun deployment does not perform another HPIA update. The frozen eval
 ```text
 DriverDeployer -ForceAll
         |
-        +-- no snapshot
-        +-- no SPList
+        +-- no Evaluation snapshot or snapshot SPList
         +-- no PSADT
+        +-- ExcludeSoftPaqs bypassed
         v
 HPIA release check/update
         |
         v
-HPIA direct full AutoInstallable remediation
+Analyze/List AutoInstallable preflight
+        |
+        +-- generic OS reference (4104) --> fail closed, no remediation
+        |
+        +-- explicit SSMCompliant=True recommendations only
+        |
+        v
+Transient frozen ForceAll SPList
+        |
+        +-- no deployable recommendations --> success, no remediation
+        |
+        v
+HPIA install from validated ForceAll SPList
         |
         +-- success --> clear stale HP-DCF snapshot/handoff/defer state
 ```
@@ -121,9 +133,10 @@ Evaluation state belongs to DriverEvaluator under `IAReport\Snapshots`. The snap
 - DriverEvaluator never downloads or installs recommendation SoftPaq binaries; HPIA lifecycle maintenance may download and extract the HPIA SoftPaq.
 - DriverEvaluator verifies/updates HPIA immediately before actual evaluation; Normal/ForceRun deployment does not update HPIA again.
 - DriverEvaluator defensively validates HPIA AutoInstallable results and commits only recommendations with explicit `SSMCompliant=True`. Non-SSM-compliant or indeterminate recommendations are excluded from the snapshot and retained as diagnostic metadata.
+- DriverEvaluator treats HPIA exit code `4104` as a fail-closed generic OS reference condition. Recommendations produced without a supported platform/OS reference are not committed to a deployment snapshot; the failed occurrence remains retryable so a later evaluation can succeed when HP publishes a supported reference.
 - A committed SPList is a frozen deployment input.
 - A matching `.deployed` marker makes the snapshot idempotent for later Normal executions.
 - Exclusions are enforced at evaluation and immediately before Normal/ForceRun deployment.
 - Pilot is immediate; Broad is delayed from the snapshot timestamp.
 - New deployment handoff is not created while another PSADT deployment is active.
-- ForceAll is an explicit emergency/direct-remediation path that verifies/updates HPIA before remediation and intentionally bypasses snapshot, ring, exclusion and PSADT interaction.
+- ForceAll is an explicit emergency/direct-remediation path that verifies/updates HPIA and performs a fail-closed Analyze/List preflight before remediation. It bypasses Evaluation snapshots, ring eligibility, exclusions and PSADT interaction, but installs only recommendations validated with a supported platform/OS reference and explicit `SSMCompliant=True` through its transient frozen SPList.

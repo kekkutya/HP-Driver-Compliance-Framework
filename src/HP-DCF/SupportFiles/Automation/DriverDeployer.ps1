@@ -32,11 +32,17 @@
       - An existing Deployment.active flag is not bypassed.
 
     -ForceAll:
-      - Does not use a Evaluation snapshot or SPList.
+      - Does not use an Evaluation snapshot or snapshot SPList.
       - Bypasses framework/component Enabled state, ring eligibility and
         ExcludeSoftPaqs.
-      - Bypasses PSADT and invokes HPIA directly for immediate full remediation.
-      - Uses the fixed full AutoInstallable scope and does not use an SPList.
+      - Bypasses PSADT.
+      - Verifies/updates HPIA before processing.
+      - Performs a fail-closed Analyze/List preflight using the fixed
+        AutoInstallable scope.
+      - Does not remediate when HPIA reports generic OS reference exit code 4104.
+      - Builds a transient ForceAll SPList from preflight recommendations with
+        explicit SSMCompliant=True.
+      - Installs only the frozen transient ForceAll SPList.
       - Normal and ForceRun do not bypass an existing Deployment.active ownership flag.
       - ForceAll ownership handling belongs to its dedicated direct-HPIA remediation path.
 
@@ -95,6 +101,9 @@
       C:\HPIA\IAReport\Deployment\Deployment.splist.txt
       C:\HPIA\IAReport\Deployment\Deployment.active
 
+    ForceAll transient state:
+      C:\HPIA\IAReport\ForceAll\ForceAll.splist.txt
+
     Persistent deployment completion state:
       C:\HPIA\IAReport\Snapshots\Evaluation-<yyyy-MM-Wn>.deployed
 
@@ -104,6 +113,9 @@
     DriverEvaluator owns evaluation snapshot retention, including the persistent
     .deployed completion marker. Deployment.active, Deployment.request.json and
     Deployment.splist.txt belong to the transient deployment handoff workflow.
+
+    ForceAll.splist.txt is transient ForceAll execution state and is replaced by
+    a later ForceAll execution when deployable recommendations are available.
 
 .NOTES
     ComponentVersion is injected by the release workflow.
@@ -132,6 +144,8 @@ $LogFile = Join-Path $IAReportFolder "$ScriptName-$env:COMPUTERNAME.log"
 $RequestFile = Join-Path $DeploymentFolder "Deployment.request.json"
 $DeploymentSPListFile = Join-Path $DeploymentFolder "Deployment.splist.txt"
 $ActiveFlagFile = Join-Path $DeploymentFolder "Deployment.active"
+$ForceAllFolder = Join-Path $IAReportFolder "ForceAll"
+$ForceAllSPListFile = Join-Path $ForceAllFolder "ForceAll.splist.txt"
 
 # ============================================================
 # Built-in Configuration Defaults
@@ -149,7 +163,8 @@ $ConnectivityProbeTimeoutSeconds = 10
 $DeploymentCommand = "C:\HPIA\DriverDeployment\Invoke-AppDeployToolkit.exe"
 $DeploymentArguments = "-DeploymentType Install -DeployMode Interactive"
 $HPIACommand = "C:\HPIA\HP Image Assistant\HPImageAssistant.exe"
-$HPIAForceAllArguments = '/Operation:Analyze /Category:Drivers,Software,Firmware,Accessories /Selection:All /InstallType:AutoInstallable /Action:Install /AutoCleanup /Noninteractive /Debug /ReportFolder:"C:\HPIA\IAReport"'
+$HPIAForceAllPreflightArguments = '/Operation:Analyze /Category:Drivers,Software,Firmware,Accessories /Selection:All /InstallType:AutoInstallable /Action:List /Noninteractive /Debug /ReportFolder:"C:\HPIA\IAReport"'
+$HPIAForceAllInstallArguments = "/Operation:Analyze /Action:Install /SPList:`"$ForceAllSPListFile`" /AutoCleanup /Noninteractive /Debug /ReportFolder:`"$IAReportFolder`""
 $DriverDeploymentScript = "C:\HPIA\DriverDeployment\Invoke-AppDeployToolkit.ps1"
 $PSADTDeferHistoryPath = "HKLM:\SOFTWARE\PSAppDeployToolkit\DeferHistory"
 
@@ -921,6 +936,281 @@ function Clear-ForceAllPendingState {
 }
 
 
+function Get-HPIAJsonReportState {
+    $state = @{}
+
+    Get-ChildItem `
+        -Path $IAReportFolder `
+        -Filter "*.json" `
+        -File `
+        -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            $state[$_.FullName] = @{
+                LastWriteTimeUtc = $_.LastWriteTimeUtc
+                Length           = $_.Length
+            }
+        }
+
+    return $state
+}
+
+function Get-ForceAllHPIAPreflight {
+    Write-Log "ForceAll HPIA preflight starting."
+    Write-Log "HPIA executable: [$HPIACommand]"
+    Write-Log "HPIA preflight arguments: [$HPIAForceAllPreflightArguments]"
+
+    $reportsBefore = Get-HPIAJsonReportState
+
+    $process = Start-Process `
+        -FilePath $HPIACommand `
+        -ArgumentList $HPIAForceAllPreflightArguments `
+        -Wait `
+        -PassThru `
+        -WindowStyle Hidden `
+        -ErrorAction Stop
+
+    $processExitCode = [int]$process.ExitCode
+
+    Write-Log "ForceAll HPIA preflight process finished with exit code [$processExitCode]."
+
+    $changedReports = @()
+
+    foreach ($report in @(
+        Get-ChildItem `
+            -Path $IAReportFolder `
+            -Filter "*.json" `
+            -File `
+            -ErrorAction SilentlyContinue
+    )) {
+        $isChanged = $false
+
+        if (-not $reportsBefore.ContainsKey($report.FullName)) {
+            $isChanged = $true
+        }
+        else {
+            $previous = $reportsBefore[$report.FullName]
+
+            if (
+                $report.LastWriteTimeUtc -ne $previous.LastWriteTimeUtc -or
+                $report.Length -ne $previous.Length
+            ) {
+                $isChanged = $true
+            }
+        }
+
+        if (-not $isChanged) {
+            continue
+        }
+
+        try {
+            $content =
+                Get-Content `
+                    -LiteralPath $report.FullName `
+                    -Raw `
+                    -ErrorAction Stop |
+                ConvertFrom-Json -ErrorAction Stop
+
+            if ($null -eq $content.HPIA) {
+                continue
+            }
+
+            $lastAnalyzedDateString =
+                [string]$content.HPIA.LastAnalyzedDate
+
+            if ([string]::IsNullOrWhiteSpace($lastAnalyzedDateString)) {
+                continue
+            }
+
+            $lastAnalyzedDate =
+                [DateTimeOffset]::Parse(
+                    $lastAnalyzedDateString,
+                    [System.Globalization.CultureInfo]::InvariantCulture,
+                    [System.Globalization.DateTimeStyles]::RoundtripKind
+                )
+
+            $changedReports += [PSCustomObject]@{
+                File       = $report
+                Content    = $content
+                AnalyzedAt = $lastAnalyzedDate
+            }
+        }
+        catch {
+            Write-Log `
+                "Unable to parse changed ForceAll HPIA JSON report [$($report.FullName)]: $($_.Exception.Message)" `
+                "WARNING"
+        }
+    }
+
+    if ($changedReports.Count -eq 0) {
+        throw "ForceAll preflight failed: no new or modified HPIA JSON report could be validated."
+    }
+
+    $selectedReport =
+        $changedReports |
+        Sort-Object AnalyzedAt -Descending |
+        Select-Object -First 1
+
+    $reportPath = $selectedReport.File.FullName
+    $reportJson = $selectedReport.Content
+
+    $reportExitCode =
+        [int]$reportJson.HPIA.ExitCode
+
+    $reportStatus =
+        [string]$reportJson.HPIA.LastOperationStatus
+
+    $reportOperation =
+        [string]$reportJson.HPIA.HPIAOperation
+
+    Write-Log "ForceAll preflight report: [$reportPath]"
+    Write-Log "ForceAll preflight JSON ExitCode: [$reportExitCode]"
+    Write-Log "ForceAll preflight JSON HPIAOperation: [$reportOperation]"
+    Write-Log "ForceAll preflight JSON LastOperationStatus: [$reportStatus]"
+
+    if ($processExitCode -eq 4104 -or $reportExitCode -eq 4104) {
+        throw "ForceAllGenericOSReference: HPIA preflight used a generic OS reference [4104]. Remediation is blocked because HP-DCF does not deploy recommendations produced without a supported platform/OS reference."
+    }
+
+    $acceptedPreflightExitCodes = @(0, 256, 257)
+
+    if ($processExitCode -notin $acceptedPreflightExitCodes) {
+        throw "ForceAll HPIA preflight failed with process exit code [$processExitCode]."
+    }
+
+    if ($reportExitCode -notin $acceptedPreflightExitCodes) {
+        throw "ForceAll HPIA preflight JSON report indicates failure with exit code [$reportExitCode]."
+    }
+
+    if ($reportStatus -ne "Success") {
+        throw "ForceAll HPIA preflight JSON status [$reportStatus] is not [Success]."
+    }
+
+    if ($reportOperation -ne "Analyze") {
+        throw "ForceAll HPIA preflight returned unexpected operation [$reportOperation]. Expected [Analyze]."
+    }
+
+    $detectedRecommendations =
+        if ($null -eq $reportJson.HPIA.Recommendations) {
+            @()
+        }
+        else {
+            @($reportJson.HPIA.Recommendations)
+        }
+
+    $recommendations = @()
+
+    foreach ($recommendation in $detectedRecommendations) {
+        $softPaqId =
+            [string]$recommendation.SoftPaqID
+
+        $ssmCompliant =
+            [string]$recommendation.SSMCompliant
+
+        if ($ssmCompliant -ne "True") {
+            Write-Log `
+                "ForceAll preflight excluded non-SSM-compliant recommendation: [$softPaqId] [$([string]$recommendation.Name)] [SSMCompliant=$ssmCompliant]" `
+                "WARNING"
+
+            continue
+        }
+
+        $recommendations += $recommendation
+    }
+
+    $softPaqNumbers = @(
+        foreach ($recommendation in $recommendations) {
+            $softPaqId =
+                [string]$recommendation.SoftPaqID
+
+            if ([string]::IsNullOrWhiteSpace($softPaqId)) {
+                continue
+            }
+
+            $rawNumber =
+                $softPaqId -replace '^(?i)sp', ''
+
+            if ($rawNumber -match '^\d+$') {
+                $rawNumber
+            }
+        }
+    )
+
+    if ($recommendations.Count -ne $softPaqNumbers.Count) {
+        throw "ForceAll preflight recommendation count [$($recommendations.Count)] does not match valid SoftPaq number count [$($softPaqNumbers.Count)]."
+    }
+
+    $uniqueSoftPaqNumbers =
+        @($softPaqNumbers | Select-Object -Unique)
+
+    if ($uniqueSoftPaqNumbers.Count -ne $recommendations.Count) {
+        throw "ForceAll preflight detected duplicate SoftPaq IDs."
+    }
+
+    Write-Log "ForceAll preflight detected recommendation count: [$($detectedRecommendations.Count)]"
+    Write-Log "ForceAll preflight deployable recommendation count: [$($uniqueSoftPaqNumbers.Count)]"
+
+    return [PSCustomObject]@{
+        ProcessExitCode     = $processExitCode
+        ReportExitCode      = $reportExitCode
+        ReportPath          = $reportPath
+        SoftPaqs            = @($uniqueSoftPaqNumbers)
+        RecommendationCount = $uniqueSoftPaqNumbers.Count
+    }
+}
+
+function Set-ForceAllSPList {
+    param(
+        [Parameter(Mandatory)]
+        [string[]]$SoftPaqs
+    )
+
+    if (-not (Test-Path -LiteralPath $ForceAllFolder -PathType Container)) {
+        New-Item `
+            -Path $ForceAllFolder `
+            -ItemType Directory `
+            -Force `
+            -ErrorAction Stop |
+            Out-Null
+
+        Write-Log "Created ForceAll transient folder: [$ForceAllFolder]"
+    }
+
+    if (Test-Path -LiteralPath $ForceAllSPListFile -PathType Leaf) {
+        Remove-Item `
+            -LiteralPath $ForceAllSPListFile `
+            -Force `
+            -ErrorAction Stop
+    }
+
+    $SoftPaqs |
+        Set-Content `
+            -LiteralPath $ForceAllSPListFile `
+            -Encoding ASCII `
+            -ErrorAction Stop
+
+    $writtenSoftPaqs = @(
+        Get-Content `
+            -LiteralPath $ForceAllSPListFile `
+            -ErrorAction Stop |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    )
+
+    if ($writtenSoftPaqs.Count -ne $SoftPaqs.Count) {
+        throw "ForceAll SPList validation failed. Expected [$($SoftPaqs.Count)] entries, found [$($writtenSoftPaqs.Count)]."
+    }
+
+    $invalidEntries =
+        @($writtenSoftPaqs | Where-Object { $_ -notmatch '^\d+$' })
+
+    if ($invalidEntries.Count -gt 0) {
+        throw "ForceAll SPList contains invalid entries: [$($invalidEntries -join ', ')]."
+    }
+
+    Write-Log "ForceAll transient SPList created: [$ForceAllSPListFile]"
+    Write-Log "ForceAll transient SPList SoftPaqs: [$($writtenSoftPaqs -join ',')]"
+}
+
 function Start-ForceAllHPIARemediation {
     Invoke-HPIAInstallOrUpdate
 
@@ -937,30 +1227,73 @@ function Start-ForceAllHPIARemediation {
     }
 
     Write-Log "ForceAll HP Image Assistant version: [$HPIAVersion]"
-    Write-Log "ForceAll direct HPIA remediation starting."
-    Write-Log "HPIA executable: [$HPIACommand]"
-    Write-Log "HPIA arguments: [$HPIAForceAllArguments]"
     Write-Log "PSADT is bypassed for ForceAll."
+
+    $preflight =
+        Get-ForceAllHPIAPreflight
+
+    $script:EffectiveSoftPaqCount =
+        $preflight.RecommendationCount
+
+    if ($preflight.RecommendationCount -eq 0) {
+        Write-Log "ForceAll preflight found no deployable recommendations. No remediation required."
+        return 256
+    }
+
+    Set-ForceAllSPList `
+        -SoftPaqs $preflight.SoftPaqs
+
+    Write-Log "ForceAll HPIA remediation starting from validated transient SPList."
+    Write-Log "HPIA executable: [$HPIACommand]"
+    Write-Log "HPIA install arguments: [$HPIAForceAllInstallArguments]"
 
     $process = Start-Process `
         -FilePath $HPIACommand `
-        -ArgumentList $HPIAForceAllArguments `
+        -ArgumentList $HPIAForceAllInstallArguments `
         -Wait `
         -PassThru `
         -ErrorAction Stop
 
     $exitCode = [int]$process.ExitCode
-    Write-Log "ForceAll HPIA process finished with exit code [$exitCode]."
+
+    Write-Log "ForceAll HPIA remediation process finished with exit code [$exitCode]."
 
     switch ($exitCode) {
-        0 { Write-Log "ForceAll HPIA remediation completed successfully." }
-        256 { Write-Log "ForceAll HPIA remediation completed with no applicable recommendations." }
-        1641 { Write-Log "ForceAll HPIA remediation completed successfully and initiated a restart." "WARNING" }
-        3010 { Write-Log "ForceAll HPIA remediation completed successfully and a restart is required." "WARNING" }
-        3020 { throw "ForceAll HPIA remediation failed: one or more SoftPaq installations failed. Exit code [3020]." }
-        4098 { throw "ForceAll HPIA remediation failed: no internet connection. Exit code [4098]." }
-        4099 { throw "ForceAll HPIA remediation failed: invalid SoftPaq number. Exit code [4099]." }
-        default { throw "ForceAll HPIA remediation failed with exit code [$exitCode]." }
+        0 {
+            Write-Log "ForceAll HPIA remediation completed successfully."
+        }
+
+        256 {
+            Write-Log "ForceAll HPIA remediation completed with no applicable recommendations."
+        }
+
+        1641 {
+            Write-Log "ForceAll HPIA remediation completed successfully and initiated a restart." "WARNING"
+        }
+
+        3010 {
+            Write-Log "ForceAll HPIA remediation completed successfully and a restart is required." "WARNING"
+        }
+
+        3020 {
+            throw "ForceAll HPIA remediation failed: one or more SoftPaq installations failed. Exit code [3020]."
+        }
+
+        4098 {
+            throw "ForceAll HPIA remediation failed: no internet connection. Exit code [4098]."
+        }
+
+        4099 {
+            throw "ForceAll HPIA remediation failed: invalid SoftPaq number in transient SPList. Exit code [4099]."
+        }
+
+        4104 {
+            throw "ForceAllGenericOSReference: HPIA reported generic OS reference exit code [4104] during SPList remediation. Remediation result is not accepted as successful."
+        }
+
+        default {
+            throw "ForceAll HPIA remediation failed with exit code [$exitCode]."
+        }
     }
 
     return $exitCode
