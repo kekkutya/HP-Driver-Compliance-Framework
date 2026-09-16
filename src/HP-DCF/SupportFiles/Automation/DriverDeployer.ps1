@@ -1085,8 +1085,11 @@ function Get-ForceAllHPIAPreflight {
         throw "ForceAll HPIA preflight JSON status [$reportStatus] is not [Success]."
     }
 
-    if ($reportOperation -ne "Analyze") {
-        throw "ForceAll HPIA preflight returned unexpected operation [$reportOperation]. Expected [Analyze]."
+    $expectedPreflightOperation =
+        "Analyze Action List"
+
+    if ($reportOperation -ne $expectedPreflightOperation) {
+        throw "ForceAll HPIA preflight returned unexpected operation [$reportOperation]. Expected [$expectedPreflightOperation]."
     }
 
     $detectedRecommendations =
