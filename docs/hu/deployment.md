@@ -72,11 +72,11 @@ A HP CMSL shared prerequisite-ként kezelt komponens. A HP-DCF telepítés és j
 
 ## Verziózás
 
-v1.0.7:
+v1.0.8:
 
 ```text
-Framework       1.0.7
-DriverEvaluator 1.0.4
-DriverDeployer  1.0.5
+Framework       1.0.8
+DriverEvaluator 1.0.5
+DriverDeployer  1.0.6
 Administrative Template  1.0.1
 ```

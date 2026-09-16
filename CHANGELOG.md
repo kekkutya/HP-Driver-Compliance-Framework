@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-09-16
+
+### Changed
+
+- DriverEvaluator now treats HPIA exit code `4104` (generic OS reference) as an explicit fail-closed evaluation result and does not commit recommendations produced without a supported platform/OS reference to a deployment snapshot.
+- DriverDeployer ForceAll now performs a fail-closed HPIA Analyze/List preflight before remediation, blocks generic OS reference results, defensively filters for explicit `SSMCompliant=True`, and installs only the validated frozen transient SPList.
+- Updated the framework baseline to 1.0.8, DriverEvaluator to 1.0.5, and DriverDeployer to 1.0.6.
+
 ## [1.0.7] - 2026-09-07
 
 ### Added
@@ -114,7 +122,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Earlier `0.x` tags represent pre-1.0 development milestones and are not individually documented here.
 
-[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.8
 [1.0.7]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.7
 [1.0.5]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.5
 [1.0.4]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.4

@@ -1562,6 +1562,11 @@ try
                 return "Complete request could not be sent to remote server"
             }
 
+            4104
+            {
+                return "Generic OS reference used because no supported operating system reference is available for this platform"
+            }
+
             8192
             {
                 return "HPIA operation failed"
@@ -2330,6 +2335,27 @@ Write-Log `
     # Validate HPIA Process
     # ========================================================
 
+    if ($HPIAExitCode -eq 4104)
+    {
+        $FailureReason =
+            "HPIA used a generic OS reference because no supported operating system reference is available for this platform. Evaluation results will not be committed to a deployment snapshot."
+
+
+        Write-Log `
+            -Message $FailureReason `
+            -Level "WARNING"
+
+
+        Set-DeltaFailure `
+            -ExitCode $HPIAExitCode `
+            -Reason $FailureReason `
+            -HPIAVersion $HPIAVersion
+
+
+        exit $HPIAExitCode
+    }
+
+
     if ($HPIAExitCode -notin $AcceptedHPIAExitCodes)
     {
         $FailureReason =
@@ -2354,6 +2380,27 @@ Write-Log `
     # ========================================================
     # Validate HPIA JSON
     # ========================================================
+
+    if ($ReportExitCode -eq 4104)
+    {
+        $FailureReason =
+            "HPIA JSON report indicates that a generic OS reference was used because no supported operating system reference is available for this platform. Evaluation results will not be committed to a deployment snapshot."
+
+
+        Write-Log `
+            -Message $FailureReason `
+            -Level "WARNING"
+
+
+        Set-DeltaFailure `
+            -ExitCode $ReportExitCode `
+            -Reason $FailureReason `
+            -HPIAVersion $HPIAVersion
+
+
+        exit $ReportExitCode
+    }
+
 
     if ($ReportExitCode -notin $AcceptedHPIAExitCodes)
     {
