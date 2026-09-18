@@ -75,18 +75,18 @@ A HP CMSL shared prerequisite-ként kezelt komponens. A HP-DCF telepítés és j
 Detektálási állapot:
 
 ```text
-HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
-    Version    REG_SZ    <FrameworkVersion>
+HKLM\SOFTWARE\HPDriverComplianceFramework\Installation
+    FrameworkVersion    REG_SZ    <FrameworkVersion>
 ```
 
-Verzióalapú alkalmazásdetektálásnál a `Version` értéket a deployment csomag framework verziójával kell összehasonlítani. A registry kulcs puszta megléte önmagában nem azonosítja a telepített framework verzióját.
+Verzióalapú alkalmazásdetektálásnál a `FrameworkVersion` értéket a deployment csomag framework verziójával kell összehasonlítani.
 
 ## Verziózás
 
-v1.0.10:
+v1.0.11:
 
 ```text
-Framework       1.0.10
+Framework       1.0.11
 DriverEvaluator 1.0.5
 DriverDeployer  1.0.7
 Administrative Template  1.0.1

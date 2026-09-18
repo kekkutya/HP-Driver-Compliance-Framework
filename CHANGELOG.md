@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.11] - 2026-09-18
+
+### Fixed
+
+- Moved framework installation detection to a dedicated `Installation` state under the HP-DCF registry tree so deployment versions use an independent detection identity.
+
+### Changed
+
+- Updated the framework baseline to 1.0.11. Component and Administrative Template versions remain unchanged.
+
 ## [1.0.10] - 2026-09-18
 
 ### Changed
@@ -139,7 +149,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Earlier `0.x` tags represent pre-1.0 development milestones and are not individually documented here.
 
-[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.10...HEAD
+[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.11...HEAD
+[1.0.11]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.11
 [1.0.10]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.10
 [1.0.9]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.9
 [1.0.8]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.8

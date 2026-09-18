@@ -5,4 +5,4 @@ Technical documentation is available in two languages:
 - [English](en/README.md) — canonical technical documentation
 - [Magyar](hu/README.md) — Hungarian translation
 
-The documentation describes the **v1.0.10** framework baseline (DriverEvaluator 1.0.5, DriverDeployer 1.0.7).
+The documentation describes the **v1.0.11** framework baseline (DriverEvaluator 1.0.5, DriverDeployer 1.0.7).
