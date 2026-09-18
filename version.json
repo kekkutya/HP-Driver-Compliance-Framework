@@ -1,5 +1,5 @@
 {
-  "FrameworkVersion": "1.0.9",
+  "FrameworkVersion": "1.0.10",
   "Components": {
     "DriverEvaluator": "1.0.5",
     "DriverDeployer": "1.0.7"

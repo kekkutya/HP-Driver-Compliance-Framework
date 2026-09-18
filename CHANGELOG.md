@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.10] - 2026-09-18
+
+### Changed
+
+- Framework installation detection now records the installed framework version in the `Version` value under `HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework`, enabling version-aware deployment detection instead of key-existence-only detection.
+- Updated the framework baseline to 1.0.10. Component and Administrative Template versions remain unchanged.
+
 ## [1.0.9] - 2026-09-16
 
 ### Fixed
@@ -132,7 +139,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Earlier `0.x` tags represent pre-1.0 development milestones and are not individually documented here.
 
-[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.9...HEAD
+[Unreleased]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/compare/v1.0.10...HEAD
+[1.0.10]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.10
 [1.0.9]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.9
 [1.0.8]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.8
 [1.0.7]: https://github.com/kekkutya/HP-Driver-Compliance-Framework/releases/tag/v1.0.7

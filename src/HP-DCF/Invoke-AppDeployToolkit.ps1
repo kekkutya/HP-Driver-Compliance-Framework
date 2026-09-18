@@ -612,8 +612,12 @@ function Install-ADTDeployment
 
     }
 
-    ## Intune detection key
-    Set-ADTRegistryKey -Key "HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework"
+    ## Framework installation detection
+    Set-ADTRegistryKey `
+        -Key "HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework" `
+        -Name "Version" `
+        -Value $adtSession.AppVersion `
+        -Type String
 }
 
 function Uninstall-ADTDeployment
@@ -704,7 +708,7 @@ function Uninstall-ADTDeployment
 
     Write-ADTLogEntry -Message 'HP-DCF framework registry configuration removed successfully.'
     
-    ## Intune detection key
+    ## Framework installation detection
     Remove-ADTRegistryKey -Key "HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework"
 }
 
@@ -784,8 +788,12 @@ function Repair-ADTDeployment
 
     }
 
-    ## Intune detection key
-    Set-ADTRegistryKey -Key "HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework"
+    ## Framework installation detection
+    Set-ADTRegistryKey `
+        -Key "HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework" `
+        -Name "Version" `
+        -Value $adtSession.AppVersion `
+        -Type String
 }
 
 
