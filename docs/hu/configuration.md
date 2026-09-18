@@ -1,6 +1,6 @@
 # Konfigurációs referencia
 
-Ez a dokumentum a HP-DCF v1.0.9 effektív konfigurációs modelljét írja le.
+Ez a dokumentum a HP-DCF v1.0.10 effektív konfigurációs modelljét írja le.
 
 ## Precedencia és alapértelmezetten tiltott működés
 
@@ -104,7 +104,10 @@ Deployer `-ForceAll`: snapshot és kizárás nélkül, a PSADT megkerülésével
 
 ```text
 HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
+    Version    REG_SZ    <FrameworkVersion>
 ```
+
+A `Version` érték a telepített framework verzióját tartalmazza, és sikeres telepítés vagy javítás után kerül bejegyzésre. A deployment rendszer így verzióalapú detektálást használhat a registry kulcs puszta meglétének ellenőrzése helyett.
 
 Ez nem része a framework policy-/konfigurációs struktúrájának.
 

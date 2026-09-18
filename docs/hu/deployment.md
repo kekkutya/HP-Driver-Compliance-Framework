@@ -70,12 +70,23 @@ A `C:\HPIA` az 1.0.x architektúrában kizárólagosan a HP-DCF munkakönyvtára
 
 A HP CMSL shared prerequisite-ként kezelt komponens. A HP-DCF telepítés és javítás során telepítheti vagy frissítheti a HP CMSL-t, de a framework eltávolításakor szándékosan nem távolítja el, mert más management workflow-k is használhatják.
 
-## Verziózás
+## Alkalmazásdetektálás
 
-v1.0.9:
+Detektálási állapot:
 
 ```text
-Framework       1.0.9
+HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
+    Version    REG_SZ    <FrameworkVersion>
+```
+
+Verzióalapú alkalmazásdetektálásnál a `Version` értéket a deployment csomag framework verziójával kell összehasonlítani. A registry kulcs puszta megléte önmagában nem azonosítja a telepített framework verzióját.
+
+## Verziózás
+
+v1.0.10:
+
+```text
+Framework       1.0.10
 DriverEvaluator 1.0.5
 DriverDeployer  1.0.7
 Administrative Template  1.0.1

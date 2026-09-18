@@ -90,18 +90,21 @@ Configuration root:
 HKLM\SOFTWARE\HPDriverComplianceFramework
 ```
 
-Detection key:
+Detection state:
 
 ```text
 HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
+    Version    REG_SZ    <FrameworkVersion>
 ```
+
+For version-aware application detection, compare `Version` with the framework version of the deployment package. Key existence alone does not identify the installed framework version.
 
 ## Release versioning
 
-`version.json` independently tracks framework and component versions. For v1.0.9:
+`version.json` independently tracks framework and component versions. For v1.0.10:
 
 ```text
-Framework       1.0.9
+Framework       1.0.10
 DriverEvaluator 1.0.5
 DriverDeployer  1.0.7
 Administrative Template  1.0.1

@@ -1,6 +1,6 @@
 # Configuration Reference
 
-This document describes the effective configuration model of HP-DCF v1.0.9.
+This document describes the effective configuration model of HP-DCF v1.0.10.
 
 ## Precedence and fail-closed defaults
 
@@ -119,7 +119,10 @@ The framework installer uses a separate application-detection key:
 
 ```text
 HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
+    Version    REG_SZ    <FrameworkVersion>
 ```
+
+`Version` contains the installed framework version and is written after a successful installation or repair. Deployment systems can use this value for version-aware detection instead of relying only on the existence of the key.
 
 It is not part of the framework policy/configuration tree.
 
