@@ -1,6 +1,6 @@
 # Konfigurációs referencia
 
-Ez a dokumentum a HP-DCF v1.0.10 effektív konfigurációs modelljét írja le.
+Ez a dokumentum a HP-DCF v1.0.11 effektív konfigurációs modelljét írja le.
 
 ## Precedencia és alapértelmezetten tiltott működés
 
@@ -100,16 +100,18 @@ Deployer `-ForceRun`: érvényes snapshotot használ, megkerüli az engedélyez�
 
 Deployer `-ForceAll`: snapshot és kizárás nélkül, a PSADT megkerülésével közvetlen HPIA full AutoInstallable helyreállítást futtat. A `-ForceRun` és a `-ForceAll` nem kombinálható.
 
-## Detektálási registry kulcs
+## Alkalmazásdetektálási állapot
+
+A framework telepítő a framework registry struktúráján belül rögzíti a telepítési állapotot:
 
 ```text
-HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
-    Version    REG_SZ    <FrameworkVersion>
+HKLM\SOFTWARE\HPDriverComplianceFramework\Installation
+    FrameworkVersion    REG_SZ    <FrameworkVersion>
 ```
 
-A `Version` érték a telepített framework verzióját tartalmazza, és sikeres telepítés vagy javítás után kerül bejegyzésre. A deployment rendszer így verzióalapú detektálást használhat a registry kulcs puszta meglétének ellenőrzése helyett.
+A `FrameworkVersion` érték a telepített framework verzióját tartalmazza, és sikeres telepítés vagy javítás után kerül bejegyzésre. A deployment rendszer ezt az értéket használhatja verzióalapú detektálásra.
 
-Ez nem része a framework policy-/konfigurációs struktúrájának.
+Eltávolításkor a telepítési állapot a framework teljes registry struktúrájával együtt törlődik.
 
 ## Administrative Templates
 

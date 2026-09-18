@@ -1,6 +1,6 @@
 # Configuration Reference
 
-This document describes the effective configuration model of HP-DCF v1.0.10.
+This document describes the effective configuration model of HP-DCF v1.0.11.
 
 ## Precedence and fail-closed defaults
 
@@ -113,18 +113,18 @@ DriverDeployer.ps1 -ForceAll
 
 `-ForceAll` ignores snapshots and exclusions, bypasses PSADT, and invokes HPIA directly with the fixed AutoInstallable remediation scope. `-ForceRun` and `-ForceAll` cannot be combined.
 
-## Application detection key
+## Application detection state
 
-The framework installer uses a separate application-detection key:
+The framework installer records installation state under the framework registry tree:
 
 ```text
-HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
-    Version    REG_SZ    <FrameworkVersion>
+HKLM\SOFTWARE\HPDriverComplianceFramework\Installation
+    FrameworkVersion    REG_SZ    <FrameworkVersion>
 ```
 
-`Version` contains the installed framework version and is written after a successful installation or repair. Deployment systems can use this value for version-aware detection instead of relying only on the existence of the key.
+`FrameworkVersion` contains the installed framework version and is written after a successful installation or repair. Deployment systems can use this value for version-aware detection.
 
-It is not part of the framework policy/configuration tree.
+The installation state is removed together with the framework registry tree during uninstall.
 
 ## Administrative Templates
 

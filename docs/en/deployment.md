@@ -93,18 +93,18 @@ HKLM\SOFTWARE\HPDriverComplianceFramework
 Detection state:
 
 ```text
-HKLM\SOFTWARE\InstalledApps\HPDriverComplianceFramework
-    Version    REG_SZ    <FrameworkVersion>
+HKLM\SOFTWARE\HPDriverComplianceFramework\Installation
+    FrameworkVersion    REG_SZ    <FrameworkVersion>
 ```
 
-For version-aware application detection, compare `Version` with the framework version of the deployment package. Key existence alone does not identify the installed framework version.
+For version-aware application detection, compare `FrameworkVersion` with the framework version of the deployment package.
 
 ## Release versioning
 
-`version.json` independently tracks framework and component versions. For v1.0.10:
+`version.json` independently tracks framework and component versions. For v1.0.11:
 
 ```text
-Framework       1.0.10
+Framework       1.0.11
 DriverEvaluator 1.0.5
 DriverDeployer  1.0.7
 Administrative Template  1.0.1
